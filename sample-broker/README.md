@@ -13,7 +13,11 @@ Most developers will presumably want to work with the code using an IDE such as 
 Run from command line
 ---------------------
 
-This is a maven project. You can run the broker from the command line using maven, as
+To run some tests and ensure your environment is correctly set up, run:
+
+`mvn clean test`
+
+You can run the broker from the command line using maven, as
 
 `mvn test exec:exec [-Dexec.args="<arguments>"]`
 
@@ -27,12 +31,12 @@ where arguments can include:
 * `--queue-name name` tells the broker to listen on the named queue for messages from the server. This is really only useful for testing, since the queue name defaults to the broker name, and in a tournament situation is provided by the tournament manager upon successful login.
 * `--server-queue name` tells the broker the name of the JMS input queue for the server. This is also needed only for testing, because the queue name defaults to 'serverInput' and in a tournament situation is provided by the tournament manager upon successful login.
 
-If there are no non-default arguments, and if the broker has already been compiled, then it is enough to simply run the broker as `mvn exec:exec`.
+If there are no non-default arguments, and if the broker has already been compiled, then it is enough to simply run the broker as `mvn exec:exec`
 
 Note: because of how the exec Maven plugin works, and because the main class is actually in a different module (`broker-core`), it is possible to execute
 without compiling. This will result in running stale class files (previously compiled classes possibly from outdated source code) or, if you've not compiled
-at all yet or recently cleaned the project, a broker that connects to the server but doesn't issue any transactions. So always make sure to tell Maven to do
-both `compile` as well as `exec:exec`!
+at all yet or recently cleaned the project, a broker that connects to the server but doesn't issue any transactions. **So always make sure to tell Maven to do
+both `compile` as well as `exec:exec`!**
 
 Prepare an executable jar
 ---------------------------
