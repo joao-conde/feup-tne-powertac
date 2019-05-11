@@ -1,14 +1,19 @@
 Power TAC Sample Broker
 =======================
 
-The sample broker is intended to help broker developers by providing both a foundation that interfaces correctly with the Power TAC infrastructure, and an example of a working broker agent. It handles all message types and operates in both wholesale and retail markets. It issues a set of tariffs as soon as possible, one for each PowerType detected in the customer records given in the bootstrap dataset. It then trades in the wholesale market using essentially the same strategy as the default broker. 
-
-Without changing anything, the current version assumes the server is running on localhost, and is not picky about passwords. You can change the server URL by editing the broker.properties file, or by using your own properties file. Passwords are generally ignored outside a tournament environment.
+The sample broker:
+1. handles all message types
+2. operates in both wholesale and retail markets
+3. issues a set of tariffs as soon as possible, one for each PowerType detected in the customer records given in the bootstrap dataset
+4. trades in the wholesale market using essentially the same strategy as the default broker. 
+5. current version assumes the server is running on localhost (editable in broker.properties file)
 
 Import into IDE
 ---------------
 
-Most developers will presumably want to work with the code using an IDE such as [STS](http://www.springsource.org/sts). The sample-broker package is a maven project, so it works to just do File->Import->Existing Maven Projects and select the sample-broker directory (the directory containing the pom.xml file). You may wish to change the "name" attribute in the pom.xml to match the name of your broker. You can set up a simple "run configuration" to allow you to run it from the IDE. It is an AspectJ/Java app, the main class is `org.powertac.samplebroker.core.BrokerMain`, and there are no arguments required unless you wish to specify an alternate config file or pass other options (see below).
+The sample-broker package is a maven project, so it works to just do File->Import->Existing Maven Projects and select the sample-broker directory (the directory containing the pom.xml file). 
+
+You may wish to change the "name" attribute in the pom.xml to match the name of your broker. 
 
 Run from command line
 ---------------------
