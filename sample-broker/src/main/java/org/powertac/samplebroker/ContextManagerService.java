@@ -68,6 +68,7 @@ implements Initializable
   public void handleMessage (BankTransaction btx)
   {
     // TODO - handle this
+    log.info("Bank transaction: " + btx.toString());
   }
 
   /**
@@ -86,6 +87,7 @@ implements Initializable
   public void handleMessage (DistributionReport dr)
   {
     // TODO - use this data
+    log.info("Distribution Report: " + dr.toString());
   }
   
   /**
@@ -96,6 +98,7 @@ implements Initializable
   public void handleMessage (Competition comp)
   {
     // TODO - process competition properties
+    log.info("Competition Properties: " + comp.toString());
   }
 
   /**
@@ -104,5 +107,6 @@ implements Initializable
   public void handleMessage (java.util.Properties serverProps)
   {
     // TODO - adapt to the server setup.
+    log.info("Server props: " + serverProps.toString());
   }
 }

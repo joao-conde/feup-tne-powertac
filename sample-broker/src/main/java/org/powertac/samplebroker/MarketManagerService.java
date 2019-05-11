@@ -17,6 +17,7 @@ package org.powertac.samplebroker;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.SortedSet;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +30,7 @@ import org.powertac.common.MarketPosition;
 import org.powertac.common.MarketTransaction;
 import org.powertac.common.Order;
 import org.powertac.common.Orderbook;
+import org.powertac.common.OrderbookOrder;
 import org.powertac.common.Timeslot;
 import org.powertac.common.WeatherForecast;
 import org.powertac.common.WeatherReport;
@@ -162,6 +164,9 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (ClearedTrade ct)
   {
+    log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
+    "; Price: " + ct.getExecutionPrice() + 
+    " timeslot: " + ct.getTimeslotIndex());
   }
 
   /**
@@ -219,6 +224,7 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (MarketPosition posn)
   {
+    log.info("Market position: " + posn.toString());
     broker.getBroker().addMarketPosition(posn, posn.getTimeslotIndex());
   }
   
@@ -228,6 +234,7 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (MarketTransaction tx)
   {
+    log.info("Market transaction:" + tx.toString());
     // reset price escalation when a trade fully clears.
     Order lastTry = lastOrder.get(tx.getTimeslotIndex());
     if (lastTry == null) // should not happen
@@ -243,6 +250,11 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (Orderbook orderbook)
   {
+    log.info("Order book received");
+    SortedSet<OrderbookOrder> asks = orderbook.getAsks();
+    SortedSet<OrderbookOrder> bids = orderbook.getBids();
+    asks.forEach(a -> log.info("ask" + a.toString()));
+    bids.forEach(b -> log.info("bid: " + b.toString()));
   }
   
   /**
@@ -250,6 +262,11 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (WeatherForecast forecast)
   {
+    log.info("Weather forecast received");
+    forecast.getPredictions().forEach(p -> log.info("temp: " + p.getTemperature() + 
+     "; clouds: " + p.getCloudCover() +
+     "; time: " + p.getForecastTime() + 
+     "; wind speed: " + p.getWindSpeed()));
   }
 
   /**
@@ -257,6 +274,10 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (WeatherReport report)
   {
+    log.info("Weather Report received");
+    log.info("temp: " + report.getTemperature() + 
+    "; clouds: " + report.getCloudCover() + 
+    "; wind: " + report.getWindSpeed());
   }
 
   /**
@@ -265,6 +286,7 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (BalanceReport report)
   {
+    log.info("Balance Report: " + report.getNetImbalance() + "; timeslot: "+ report.getTimeslotIndex());
   }
 
   // ----------- per-timeslot activation ---------------
