@@ -15,6 +15,7 @@
  */
 package org.powertac.samplebroker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.SortedSet;
@@ -103,6 +104,8 @@ implements MarketManager, Initializable, Activatable
   private double[] marketMWh;
   private double[] marketPrice;
   private double meanMarketPrice = 0.0;
+  private ArrayList<Double> balacingQuantity = new ArrayList<>();
+  private ArrayList<Double> balacingPrice = new ArrayList<>();
 
   public MarketManagerService ()
   {
@@ -136,6 +139,7 @@ implements MarketManager, Initializable, Activatable
   @Override
   public double getMeanMarketPrice ()
   {
+    
     return meanMarketPrice;
   }
   
@@ -155,6 +159,9 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (BalancingTransaction tx)
   {
+    System.out.println("Balancing Transaction: "+tx.getKWh()+ " charge: "+tx.getCharge());
+    balacingQuantity.add(tx.getKWh());
+    balacingPrice.add(tx.getCharge());
     log.info("Balancing tx: " + tx.getCharge());
   }
 
@@ -164,6 +171,9 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (ClearedTrade ct)
   {
+    System.out.println("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
+    "; Price: " + ct.getExecutionPrice() + 
+    " timeslot: " + ct.getTimeslotIndex());
     log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
     "; Price: " + ct.getExecutionPrice() + 
     " timeslot: " + ct.getTimeslotIndex());
