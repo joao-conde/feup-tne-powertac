@@ -16,6 +16,9 @@
 package org.powertac.samplebroker;
 
 import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+
 import org.apache.logging.log4j.LogManager;
 import org.powertac.common.BankTransaction;
 import org.powertac.common.CashPosition;
@@ -39,7 +42,12 @@ implements Initializable
 
   // current cash balance
   private double cash = 0;
-  
+
+  private ArrayList<Double> cashArray = new ArrayList<>();
+  private ArrayList<Double> totalConsumption = new ArrayList<>();
+  private ArrayList<Double> totalProduction = new ArrayList<>();
+  private int numberofCustomers;
+  private int numberofBrokers;
 
 //  @SuppressWarnings("unchecked")
   @Override
@@ -76,6 +84,7 @@ implements Initializable
    */
   public void handleMessage (CashPosition cp)
   {
+    cashArray.add(cp.getBalance());
     cash = cp.getBalance();
     log.info("Cash position: " + cash);
   }
@@ -86,7 +95,10 @@ implements Initializable
    */
   public void handleMessage (DistributionReport dr)
   {
+    System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+ dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
     // TODO - use this data
+    totalConsumption.add(dr.getTotalConsumption());
+    totalProduction.add(dr.getTotalProduction());
     log.info("Distribution Report: " + dr.toString());
   }
   
@@ -98,6 +110,8 @@ implements Initializable
   public void handleMessage (Competition comp)
   {
     // TODO - process competition properties
+    numberofBrokers = comp.getBrokers().size();
+    numberofCustomers = comp.getCustomers().size();
     log.info("Competition Properties: " + comp.toString());
   }
 
