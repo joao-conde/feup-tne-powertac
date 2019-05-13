@@ -15,6 +15,7 @@
  */
 package org.powertac.samplebroker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.SortedSet;
@@ -103,6 +104,7 @@ implements MarketManager, Initializable, Activatable
   private double[] marketMWh;
   private double[] marketPrice;
   private double meanMarketPrice = 0.0;
+  private ArrayList<Double> clearedMwh = new ArrayList<>();
 
   public MarketManagerService ()
   {
@@ -164,6 +166,7 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (ClearedTrade ct)
   {
+    marketMWh[ct.getTimeslotIndex()] = marketMWh[ct.getTimeslotIndex()] + ct.getExecutionMWh();
     log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
     "; Price: " + ct.getExecutionPrice() + 
     " timeslot: " + ct.getTimeslotIndex());
