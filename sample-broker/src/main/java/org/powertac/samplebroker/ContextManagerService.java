@@ -53,6 +53,21 @@ implements Initializable
   @Override
   public void initialize (BrokerContext broker)
   {
+    if(!PrintService.getInstance().isInitialized()) {
+      PrintService.getInstance().startCSV();
+      Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
+      {
+
+          @Override
+          public void run()
+          {
+              System.out.println("Printing");
+              PrintService.getInstance().addData();
+              System.out.println("Printed");
+          }
+      }));
+    }
+
     master = broker;
 // --- no longer needed ---
 //    for (Class<?> clazz: Arrays.asList(BankTransaction.class,
@@ -95,10 +110,9 @@ implements Initializable
    */
   public void handleMessage (DistributionReport dr)
   {
+    PrintService.getInstance().addDistributionReport(dr.getTimeslot(), dr.getTotalProduction(), dr.getTotalConsumption());
     System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+ dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
     // TODO - use this data
-    totalConsumption.add(dr.getTotalConsumption());
-    totalProduction.add(dr.getTotalProduction());
     log.info("Distribution Report: " + dr.toString());
   }
   
@@ -110,8 +124,6 @@ implements Initializable
   public void handleMessage (Competition comp)
   {
     // TODO - process competition properties
-    numberofBrokers = comp.getBrokers().size();
-    numberofCustomers = comp.getCustomers().size();
     log.info("Competition Properties: " + comp.toString());
   }
 
