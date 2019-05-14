@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.SortedSet;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.powertac.common.BalancingTransaction;
 import org.powertac.common.CapacityTransaction;
 import org.powertac.common.ClearedTrade;
@@ -152,6 +152,8 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (Competition comp)
   {
+    PrintService.getInstance().addBrokersAndConsumers(comp.getBrokers().size(), comp.getCustomers().size());
+    System.out.println("Competition");
     minMWh = Math.max(minMWh, comp.getMinimumOrderQuantity());
   }
 
@@ -160,7 +162,7 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (BalancingTransaction tx)
   {
-    System.out.println("Balancing Transaction: "+tx.getKWh()+ " charge: "+tx.getCharge());
+    //System.out.println("Balancing Transaction: "+tx.getKWh()+ " charge: "+tx.getCharge());
     balacingQuantity.add(tx.getKWh());
     balacingPrice.add(tx.getCharge());
     log.info("Balancing tx: " + tx.getCharge());
@@ -172,9 +174,8 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (ClearedTrade ct)
   {
-    System.out.println("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
-    "; Price: " + ct.getExecutionPrice() + 
-    " timeslot: " + ct.getTimeslotIndex());
+    PrintService.getInstance().addClearedQuantity(ct.getTimeslotIndex(), ct.getExecutionPrice());
+    //System.out.println("Cleared for "+ct.getTimeslotIndex()+" by "+ct.getExecutionMWh());
     log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
     "; Price: " + ct.getExecutionPrice() + 
     " timeslot: " + ct.getTimeslotIndex());
@@ -264,6 +265,16 @@ implements MarketManager, Initializable, Activatable
     log.info("Order book received");
     SortedSet<OrderbookOrder> asks = orderbook.getAsks();
     SortedSet<OrderbookOrder> bids = orderbook.getBids();
+    double totalAmountAsks = 0;
+    double totalAmountBids = 0;
+    for(OrderbookOrder ask: asks) {
+      totalAmountAsks += ask.getMWh();
+    }
+    for(OrderbookOrder bid: bids) {
+      totalAmountBids += bid.getMWh();
+    }
+    PrintService.getInstance().addAsksAndBids(totalAmountAsks, totalAmountBids);
+
     asks.forEach(a -> log.info("ask" + a.toString()));
     bids.forEach(b -> log.info("bid: " + b.toString()));
   }
@@ -278,6 +289,7 @@ implements MarketManager, Initializable, Activatable
      "; clouds: " + p.getCloudCover() +
      "; time: " + p.getForecastTime() + 
      "; wind speed: " + p.getWindSpeed()));
+     PrintService.getInstance().addWeatherForecast(forecast.getPredictions().get(forecast.getPredictions().size()-1));
   }
 
   /**
@@ -297,7 +309,8 @@ implements MarketManager, Initializable, Activatable
    */
   public synchronized void handleMessage (BalanceReport report)
   {
-    log.info("Balance Report: " + report.getNetImbalance() + "; timeslot: "+ report.getTimeslotIndex());
+    PrintService.getInstance().addImbalance(report.getNetImbalance());
+    //System.out.println("Balance Report: " + report.getNetImbalance() + "; timeslot: "+ report.getTimeslotIndex());
   }
 
   // ----------- per-timeslot activation ---------------
