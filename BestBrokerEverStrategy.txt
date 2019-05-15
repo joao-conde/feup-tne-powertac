@@ -1,0 +1,13 @@
+Imbalance > 0 : Sistema tem energia a mais
+Imbalance < 0 : Sistema precisa de energia
+
+Se previsão imbalance > 0 {
+	Se energia suficiente - NADA
+	Se energia a menos - Comprar até ter suficiente
+	Se energia a mais - Vendo o excesso pelo valor minimo do que pagaria à DU
+}
+Se previsão imbalance < 0 {
+	Se energia suficiente - Compra até atingir 50% do imbalance 
+	Se energia a menos - max(Energia suficiente, Comprar até atingir 50% do imbalance)
+	Se energia a mais - Nada
+}

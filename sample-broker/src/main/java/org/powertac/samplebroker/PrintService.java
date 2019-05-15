@@ -25,8 +25,8 @@ public class PrintService {
     ArrayList<Double> imbalances = new ArrayList<>();
     Double tempAsks = 0.0;
     Double tempBids = 0.0;
-    Map<Integer, Double> asksQuantity = new HashMap<>();
-    Map<Integer, Double> bidsQuantity = new HashMap<>();
+    ArrayList<Double> asksQuantity = new ArrayList<>();
+    ArrayList<Double> bidsQuantity = new ArrayList<>();
     Map<Integer, Double> clearedQuantity = new HashMap<>();
     Integer numberOfBrokers;
     Integer numberOfConsumers;
@@ -46,7 +46,7 @@ public class PrintService {
         try {
             FileWriter writer = new FileWriter(System.currentTimeMillis() + "_data.csv", true);
             out = new BufferedWriter(writer);
-            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast, ClearedQuantity, ClearedQuantity24h,Imbalance,Imbalance24h\n");
+            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast,ClearedQuantity,ClearedQuantity24h,Bids,Asks,Imbalance,Imbalance1h,Imbalance24h,Imbalance1hSign,Imbalance24hSign\n");
             initialized = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -60,7 +60,12 @@ public class PrintService {
         timeslots.add(timeslot);
         productions.add(production);
         consumptions.add(consumption);
+        asksQuantity.add(tempAsks);
+        bidsQuantity.add(tempBids);
+        tempAsks = 0.0;
+        tempBids = 0.0;
         System.out.println("addDistributionReport");
+
     }
 
     public void addBrokersAndConsumers(int numberOfBrokers, int numberOfConsumers) {
@@ -81,8 +86,8 @@ public class PrintService {
     }
 
     public void addAsksAndBids(Double asks, Double bids) {
-        /*tempAsks += asks;
-        tempBids += bids;*/
+        tempAsks += asks;
+        tempBids += bids;
     }
 
     public void addClearedQuantity(int timeslot, Double cleared) {
@@ -100,7 +105,10 @@ public class PrintService {
             for(int i=0; i<timeslots.size(); i++) {
                 if(i >= 24 && i < timeslots.size() - 24) {
                     out.write(timeslots.get(i) + "," + numberOfBrokers + "," + numberOfConsumers + "," + consumptions.get(i)
-                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+clearedQuantity.get(360+i)+"," + clearedQuantity.get(360+i+24)+","+imbalances.get(i)+","+(imbalances.get(i+24))+"\n");
+                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+
+                            weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+
+                            clearedQuantity.get(360+i)+"," + clearedQuantity.get(360+i+24)+","+bidsQuantity.get(i) + "," + asksQuantity.get(i) + "," + imbalances.get(i)+
+                            ","+imbalances.get(i+1) + "," + (imbalances.get(i+24))+ "," + (imbalances.get(i+1) > 0 ? "1" : "-1") + "," + (imbalances.get(i+24) > 0 ? "1" : "-1") + "\n");
                 }
             }
         } catch (IOException e) {

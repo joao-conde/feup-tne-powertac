@@ -274,9 +274,6 @@ implements MarketManager, Initializable, Activatable
       totalAmountBids += bid.getMWh();
     }
     PrintService.getInstance().addAsksAndBids(totalAmountAsks, totalAmountBids);
-
-    asks.forEach(a -> log.info("ask" + a.toString()));
-    bids.forEach(b -> log.info("bid: " + b.toString()));
   }
   
   /**
@@ -310,6 +307,7 @@ implements MarketManager, Initializable, Activatable
   public synchronized void handleMessage (BalanceReport report)
   {
     PrintService.getInstance().addImbalance(report.getNetImbalance());
+
   }
 
   // ----------- per-timeslot activation ---------------
