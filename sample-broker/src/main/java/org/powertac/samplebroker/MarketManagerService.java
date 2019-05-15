@@ -310,7 +310,6 @@ implements MarketManager, Initializable, Activatable
   public synchronized void handleMessage (BalanceReport report)
   {
     PrintService.getInstance().addImbalance(report.getNetImbalance());
-    //System.out.println("Balance Report: " + report.getNetImbalance() + "; timeslot: "+ report.getTimeslotIndex());
   }
 
   // ----------- per-timeslot activation ---------------

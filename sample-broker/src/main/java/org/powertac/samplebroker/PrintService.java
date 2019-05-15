@@ -44,9 +44,9 @@ public class PrintService {
 
     public void startCSV(){
         try {
-            FileWriter writer = new FileWriter("data.csv", true);
+            FileWriter writer = new FileWriter(System.currentTimeMillis() + "_data.csv", true);
             out = new BufferedWriter(writer);
-            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast,ClearedQuantity24h,Imbalance,Consumption-Production In 24h\n");
+            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast, ClearedQuantity, ClearedQuantity24h,Imbalance,Imbalance24h\n");
             initialized = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -98,16 +98,9 @@ public class PrintService {
     
         try {
             for(int i=0; i<timeslots.size(); i++) {
-                if(!clearedQuantity.containsKey(360+i)) {
-                    clearedQuantity.put((360+i),-1.0);
-                    System.out.println(i);
-                }
-                if(i >= 24) {
+                if(i >= 24 && i < timeslots.size() - 24) {
                     out.write(timeslots.get(i) + "," + numberOfBrokers + "," + numberOfConsumers + "," + consumptions.get(i)
-                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+clearedQuantity.get(360+i)+","+imbalances.get(i)+","+(consumptions.get(i)-productions.get(i))+"\n");
-                } else {
-                    out.write(timeslots.get(i) + "," + numberOfBrokers + "," + numberOfConsumers + "," + consumptions.get(i)
-                        + "," + productions.get(i) + ",-1,-1,"+ weather.get(i).getTemperature()+","+weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+clearedQuantity.get(360+i)+","+imbalances.get(i)+","+(consumptions.get(i)-productions.get(i))+"\n");
+                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+clearedQuantity.get(360+i)+"," + clearedQuantity.get(360+i+24)+","+imbalances.get(i)+","+(imbalances.get(i+24))+"\n");
                 }
             }
         } catch (IOException e) {
