@@ -26,5 +26,7 @@ hs_err_pid*
 #python venv
 env/
 
+.vscode/
+
 # database files
 server-distribution-release-1.6.0/files/system/db
