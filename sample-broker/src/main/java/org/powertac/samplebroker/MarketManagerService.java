@@ -321,10 +321,6 @@ implements MarketManager, Initializable, Activatable
   @Override
   public synchronized void activate (int timeslotIndex)
   {
-    if (timeslotIndex == 400) {
-      System.out.println("Printing data on timeslot " + timeslotIndex);
-      PrintService.getInstance().printData();
-    }
     double neededKWh = 0.0;
     log.debug("Current timeslot is " + timeslotRepo.currentTimeslot().getSerialNumber());
     for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {

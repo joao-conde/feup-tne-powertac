@@ -46,8 +46,11 @@ public class PrintService {
         try {
             FileWriter writer = new FileWriter(new Date(System.currentTimeMillis()).toString() + "_data.csv", true);
             out = new BufferedWriter(writer);
+            // CAT - Cleared Amount Total - Sum of CA24...CA1
+            // CA24 - Cleared Amount for timeslot t - 24
+            // CAN - Cleared Amount in the Next slot, aka t+1
             out.write(
-                    "Timeslot,CT,C24,C23,C22,C21,C20,C19,C18,C17,C16,C15,C14,C13,C12,C11,C10,C9,C8,C7,C6,C5,C4,C3,C2,C1,CN\n");
+                    "Timeslot,CAT,CA24,CA23,CA22,CA21,CA20,CA19,CA18,CA17,CA16,CA15,CA14,CA13,CA12,CA11,CA10,CA9,CA8,CA7,CA6,CA5,CA4,CA3,CA2,CA1,CAN\n");
             initialized = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -106,6 +109,11 @@ public class PrintService {
             for (int i = 385; i < 360 + timeslots.size()-1; i++) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(i % 24 + ",");
+                double sumClearedInLast24h = 0;
+                for (int j = 24; j > 0; j--) {
+                    sumClearedInLast24h += clearedQuantity.get(i-j);
+                }
+                sb.append(sumClearedInLast24h + ",");
                 for (int j = 24; j > 0; j--) {
                     sb.append(clearedQuantity.get(i - j).toString() + ",");
                 }
