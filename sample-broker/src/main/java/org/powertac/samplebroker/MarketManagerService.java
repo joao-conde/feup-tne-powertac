@@ -34,6 +34,7 @@ import org.powertac.common.Orderbook;
 import org.powertac.common.OrderbookOrder;
 import org.powertac.common.Timeslot;
 import org.powertac.common.WeatherForecast;
+import org.powertac.common.WeatherForecastPrediction;
 import org.powertac.common.WeatherReport;
 import org.powertac.common.config.ConfigurableValue;
 import org.powertac.common.msg.BalanceReport;
@@ -50,14 +51,13 @@ import org.springframework.stereotype.Service;
 
 /**
  * Handles market interactions on behalf of the broker.
+ * 
  * @author John Collins
  */
 @Service
-public class MarketManagerService 
-implements MarketManager, Initializable, Activatable
-{
+public class MarketManagerService implements MarketManager, Initializable, Activatable {
   static private Logger log = LogManager.getLogger(MarketManagerService.class);
-  
+
   private BrokerContext broker; // broker
 
   // Spring fills in Autowired dependencies through a naming convention
@@ -66,34 +66,28 @@ implements MarketManager, Initializable, Activatable
 
   @Autowired
   private TimeslotRepo timeslotRepo;
-  
+
   @Autowired
   private PortfolioManager portfolioManager;
 
   // ------------ Configurable parameters --------------
   // max and min offer prices. Max means "sure to trade"
-  @ConfigurableValue(valueType = "Double",
-          description = "Upper end (least negative) of bid price range")
-  private double buyLimitPriceMax = -1.0;  // broker pays
+  @ConfigurableValue(valueType = "Double", description = "Upper end (least negative) of bid price range")
+  private double buyLimitPriceMax = -1.0; // broker pays
 
-  @ConfigurableValue(valueType = "Double",
-          description = "Lower end (most negative) of bid price range")
-  private double buyLimitPriceMin = -70.0;  // broker pays
+  @ConfigurableValue(valueType = "Double", description = "Lower end (most negative) of bid price range")
+  private double buyLimitPriceMin = -70.0; // broker pays
 
-  @ConfigurableValue(valueType = "Double",
-          description = "Upper end (most positive) of ask price range")
-  private double sellLimitPriceMax = 70.0;    // other broker pays
+  @ConfigurableValue(valueType = "Double", description = "Upper end (most positive) of ask price range")
+  private double sellLimitPriceMax = 70.0; // other broker pays
 
-  @ConfigurableValue(valueType = "Double",
-          description = "Lower end (least positive) of ask price range")
-  private double sellLimitPriceMin = 0.5;    // other broker pays
+  @ConfigurableValue(valueType = "Double", description = "Lower end (least positive) of ask price range")
+  private double sellLimitPriceMin = 0.5; // other broker pays
 
-  @ConfigurableValue(valueType = "Double",
-          description = "Minimum bid/ask quantity in MWh")
+  @ConfigurableValue(valueType = "Double", description = "Minimum bid/ask quantity in MWh")
   private double minMWh = 0.001; // don't worry about 1 KWh or less
 
-  @ConfigurableValue(valueType = "Integer",
-          description = "If set, seed the random generator")
+  @ConfigurableValue(valueType = "Integer", description = "If set, seed the random generator")
   private Integer seedNumber = null;
 
   // ---------------- local state ------------------
@@ -108,17 +102,18 @@ implements MarketManager, Initializable, Activatable
   private ArrayList<Double> balacingQuantity = new ArrayList<>();
   private ArrayList<Double> balacingPrice = new ArrayList<>();
 
-  public MarketManagerService ()
-  {
+  public MarketManagerService() {
     super();
   }
 
-  /* (non-Javadoc)
-   * @see org.powertac.samplebroker.MarketManager#init(org.powertac.samplebroker.SampleBroker)
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.powertac.samplebroker.MarketManager#init(org.powertac.samplebroker.
+   * SampleBroker)
    */
   @Override
-  public void initialize (BrokerContext broker)
-  {
+  public void initialize(BrokerContext broker) {
     this.broker = broker;
     lastOrder = new HashMap<>();
     propertiesService.configureMe(this);
@@ -127,8 +122,7 @@ implements MarketManager, Initializable, Activatable
       System.out.println("  seeding=" + seedNumber);
       log.info("Seeding with : " + seedNumber);
       randomGen = new Random(seedNumber);
-    }
-    else {
+    } else {
       randomGen = new Random();
     }
   }
@@ -138,20 +132,18 @@ implements MarketManager, Initializable, Activatable
    * Returns the mean price observed in the market
    */
   @Override
-  public double getMeanMarketPrice ()
-  {
-    
+  public double getMeanMarketPrice() {
+
     return meanMarketPrice;
   }
-  
+
   // --------------- message handling -----------------
   /**
-   * Handles the Competition instance that arrives at beginning of game.
-   * Here we capture minimum order size to avoid running into the limit
-   * and generating unhelpful error messages.
+   * Handles the Competition instance that arrives at beginning of game. Here we
+   * capture minimum order size to avoid running into the limit and generating
+   * unhelpful error messages.
    */
-  public synchronized void handleMessage (Competition comp)
-  {
+  public synchronized void handleMessage(Competition comp) {
     PrintService.getInstance().addBrokersAndConsumers(comp.getBrokers().size(), comp.getCustomers().size());
     System.out.println("Competition");
     minMWh = Math.max(minMWh, comp.getMinimumOrderQuantity());
@@ -160,51 +152,47 @@ implements MarketManager, Initializable, Activatable
   /**
    * Handles a BalancingTransaction message.
    */
-  public synchronized void handleMessage (BalancingTransaction tx)
-  {
-    //System.out.println("Balancing Transaction: "+tx.getKWh()+ " charge: "+tx.getCharge());
+  public synchronized void handleMessage(BalancingTransaction tx) {
+    // System.out.println("Balancing Transaction: "+tx.getKWh()+ " charge:
+    // "+tx.getCharge());
     balacingQuantity.add(tx.getKWh());
     balacingPrice.add(tx.getCharge());
     log.info("Balancing tx: " + tx.getCharge());
   }
 
   /**
-   * Handles a ClearedTrade message - this is where you would want to keep
-   * track of market prices.
+   * Handles a ClearedTrade message - this is where you would want to keep track
+   * of market prices.
    */
-  public synchronized void handleMessage (ClearedTrade ct)
-  {
+  public synchronized void handleMessage(ClearedTrade ct) {
     PrintService.getInstance().addClearedQuantity(ct.getTimeslotIndex(), ct.getExecutionPrice());
-    //System.out.println("Cleared for "+ct.getTimeslotIndex()+" by "+ct.getExecutionMWh());
-    log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + 
-    "; Price: " + ct.getExecutionPrice() + 
-    " timeslot: " + ct.getTimeslotIndex());
+    // System.out.println("Cleared for "+ct.getTimeslotIndex()+" by
+    // "+ct.getExecutionMWh());
+    log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + "; Price: " + ct.getExecutionPrice() + " timeslot: "
+        + ct.getTimeslotIndex());
   }
 
   /**
    * Handles a DistributionTransaction - charges for transporting power
    */
-  public synchronized void handleMessage (DistributionTransaction dt)
-  {
+  public synchronized void handleMessage(DistributionTransaction dt) {
     log.info("Distribution tx: " + dt.getCharge());
   }
 
   /**
-   * Handles a CapacityTransaction - a charge for contribution to overall
-   * peak demand over the recent past.
+   * Handles a CapacityTransaction - a charge for contribution to overall peak
+   * demand over the recent past.
    */
-  public synchronized void handleMessage (CapacityTransaction dt)
-  {
+  public synchronized void handleMessage(CapacityTransaction dt) {
     log.info("Capacity tx: " + dt.getCharge());
   }
 
   /**
-   * Receives a MarketBootstrapData message, reporting usage and prices
-   * for the bootstrap period. We record the overall weighted mean price,
-   * as well as the mean price and usage for a week.
+   * Receives a MarketBootstrapData message, reporting usage and prices for the
+   * bootstrap period. We record the overall weighted mean price, as well as the
+   * mean price and usage for a week.
    */
-  public synchronized void handleMessage (MarketBootstrapData data)
-  {
+  public synchronized void handleMessage(MarketBootstrapData data) {
     marketMWh = new double[broker.getUsageRecordLength()];
     marketPrice = new double[broker.getUsageRecordLength()];
     double totalUsage = 0.0;
@@ -216,36 +204,31 @@ implements MarketManager, Initializable, Activatable
         // first pass, just copy the data
         marketMWh[i] = data.getMwh()[i];
         marketPrice[i] = data.getMarketPrice()[i];
-      }
-      else {
+      } else {
         // subsequent passes, accumulate mean values
         int pass = i / broker.getUsageRecordLength();
         int index = i % broker.getUsageRecordLength();
-        marketMWh[index] =
-            (marketMWh[index] * pass + data.getMwh()[i]) / (pass + 1);
-        marketPrice[index] =
-            (marketPrice[index] * pass + data.getMarketPrice()[i]) / (pass + 1);
+        marketMWh[index] = (marketMWh[index] * pass + data.getMwh()[i]) / (pass + 1);
+        marketPrice[index] = (marketPrice[index] * pass + data.getMarketPrice()[i]) / (pass + 1);
       }
     }
     meanMarketPrice = totalValue / totalUsage;
   }
 
   /**
-   * Receives a MarketPosition message, representing our commitments on 
-   * the wholesale market
+   * Receives a MarketPosition message, representing our commitments on the
+   * wholesale market
    */
-  public synchronized void handleMessage (MarketPosition posn)
-  {
+  public synchronized void handleMessage(MarketPosition posn) {
     log.info("Market position: " + posn.toString());
     broker.getBroker().addMarketPosition(posn, posn.getTimeslotIndex());
   }
-  
+
   /**
-   * Receives a new MarketTransaction. We look to see whether an order we
-   * have placed has cleared.
+   * Receives a new MarketTransaction. We look to see whether an order we have
+   * placed has cleared.
    */
-  public synchronized void handleMessage (MarketTransaction tx)
-  {
+  public synchronized void handleMessage(MarketTransaction tx) {
     log.info("Market transaction:" + tx.toString());
     // reset price escalation when a trade fully clears.
     Order lastTry = lastOrder.get(tx.getTimeslotIndex());
@@ -254,58 +237,55 @@ implements MarketManager, Initializable, Activatable
     else if (tx.getMWh() == lastTry.getMWh()) // fully cleared
       lastOrder.put(tx.getTimeslotIndex(), null);
   }
-  
+
   /**
-   * Receives market orderbooks. These list un-cleared bids and asks,
-   * from which a broker can construct approximate supply and demand curves
-   * for the following timeslot.
+   * Receives market orderbooks. These list un-cleared bids and asks, from which a
+   * broker can construct approximate supply and demand curves for the following
+   * timeslot.
    */
-  public synchronized void handleMessage (Orderbook orderbook)
-  {
+  public synchronized void handleMessage(Orderbook orderbook) {
     log.info("Order book received");
     SortedSet<OrderbookOrder> asks = orderbook.getAsks();
     SortedSet<OrderbookOrder> bids = orderbook.getBids();
     double totalAmountAsks = 0;
     double totalAmountBids = 0;
-    for(OrderbookOrder ask: asks) {
+    for (OrderbookOrder ask : asks) {
       totalAmountAsks += ask.getMWh();
     }
-    for(OrderbookOrder bid: bids) {
+    for (OrderbookOrder bid : bids) {
       totalAmountBids += bid.getMWh();
     }
     PrintService.getInstance().addAsksAndBids(totalAmountAsks, totalAmountBids);
   }
-  
+
   /**
    * Receives a new WeatherForecast.
    */
-  public synchronized void handleMessage (WeatherForecast forecast)
-  {
+  public synchronized void handleMessage(WeatherForecast forecast) {
     log.info("Weather forecast received");
-    forecast.getPredictions().forEach(p -> log.info("temp: " + p.getTemperature() + 
-     "; clouds: " + p.getCloudCover() +
-     "; time: " + p.getForecastTime() + 
-     "; wind speed: " + p.getWindSpeed()));
-     PrintService.getInstance().addWeatherForecast(forecast.getPredictions().get(forecast.getPredictions().size()-1));
+    forecast.getPredictions().forEach(p -> log.info("; temp: " + p.getTemperature() + "; clouds: " + p.getCloudCover()
+        + "; time: " + p.getForecastTime() + "; wind speed: " + p.getWindSpeed()));
+    int predictIndex = 0;
+    WeatherForecastPrediction nextDayForecast = forecast.getPredictions().get(predictIndex);
+    // forecast.getTimeslotIndex returns the current timeslot index
+    PrintService.getInstance().addWeatherForecast(forecast.getTimeslotIndex()+predictIndex+1, nextDayForecast);
   }
 
   /**
    * Receives a new WeatherReport.
    */
-  public synchronized void handleMessage (WeatherReport report)
-  {
+  public synchronized void handleMessage(WeatherReport report) {
     log.info("Weather Report received");
-    log.info("temp: " + report.getTemperature() + 
-    "; clouds: " + report.getCloudCover() + 
-    "; wind: " + report.getWindSpeed());
+    log.info("temp: " + report.getTemperature() + "; clouds: " + report.getCloudCover() + "; wind: "
+        + report.getWindSpeed());
+    PrintService.getInstance().addWeatherReport(report);
   }
 
   /**
    * Receives a BalanceReport containing information about imbalance in the
    * current timeslot.
    */
-  public synchronized void handleMessage (BalanceReport report)
-  {
+  public synchronized void handleMessage(BalanceReport report) {
     PrintService.getInstance().addImbalance(report.getNetImbalance());
 
   }
@@ -313,14 +293,13 @@ implements MarketManager, Initializable, Activatable
   // ----------- per-timeslot activation ---------------
 
   /**
-   * Compute needed quantities for each open timeslot, then submit orders
-   * for those quantities.
+   * Compute needed quantities for each open timeslot, then submit orders for
+   * those quantities.
    *
    * @see org.powertac.samplebroker.interfaces.Activatable#activate(int)
    */
   @Override
-  public synchronized void activate (int timeslotIndex)
-  {
+  public synchronized void activate(int timeslotIndex) {
     double neededKWh = 0.0;
     log.debug("Current timeslot is " + timeslotRepo.currentTimeslot().getSerialNumber());
     for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
@@ -333,12 +312,10 @@ implements MarketManager, Initializable, Activatable
   /**
    * Composes and submits the appropriate order for the given timeslot.
    */
-  private void submitOrder (double neededKWh, int timeslot)
-  {
+  private void submitOrder(double neededKWh, int timeslot) {
     double neededMWh = neededKWh / 1000.0;
 
-    MarketPosition posn =
-        broker.getBroker().findMarketPositionByTimeslot(timeslot);
+    MarketPosition posn = broker.getBroker().findMarketPositionByTimeslot(timeslot);
     if (posn != null)
       neededMWh -= posn.getOverallBalance();
     if (Math.abs(neededMWh) <= minMWh) {
@@ -346,21 +323,17 @@ implements MarketManager, Initializable, Activatable
       return;
     }
     Double limitPrice = computeLimitPrice(timeslot, neededMWh);
-    log.info("new order for " + neededMWh + " at " + limitPrice +
-             " in timeslot " + timeslot);
+    log.info("new order for " + neededMWh + " at " + limitPrice + " in timeslot " + timeslot);
     Order order = new Order(broker.getBroker(), timeslot, neededMWh, limitPrice);
     lastOrder.put(timeslot, order);
     broker.sendMessage(order);
   }
 
   /**
-   * Computes a limit price with a random element. 
+   * Computes a limit price with a random element.
    */
-  private Double computeLimitPrice (int timeslot,
-                                    double amountNeeded)
-  {
-    log.debug("Compute limit for " + amountNeeded + 
-              ", timeslot " + timeslot);
+  private Double computeLimitPrice(int timeslot, double amountNeeded) {
+    log.debug("Compute limit for " + amountNeeded + ", timeslot " + timeslot);
     // start with default limits
     Double oldLimitPrice;
     double minPrice;
@@ -368,8 +341,7 @@ implements MarketManager, Initializable, Activatable
       // buying
       oldLimitPrice = buyLimitPriceMax;
       minPrice = buyLimitPriceMin;
-    }
-    else {
+    } else {
       // selling
       oldLimitPrice = sellLimitPriceMax;
       minPrice = sellLimitPriceMin;
@@ -377,10 +349,8 @@ implements MarketManager, Initializable, Activatable
     // check for escalation
     Order lastTry = lastOrder.get(timeslot);
     if (lastTry != null)
-      log.debug("lastTry: " + lastTry.getMWh() +
-                " at " + lastTry.getLimitPrice());
-    if (lastTry != null
-        && Math.signum(amountNeeded) == Math.signum(lastTry.getMWh())) {
+      log.debug("lastTry: " + lastTry.getMWh() + " at " + lastTry.getLimitPrice());
+    if (lastTry != null && Math.signum(amountNeeded) == Math.signum(lastTry.getMWh())) {
       oldLimitPrice = lastTry.getLimitPrice();
       log.debug("old limit price: " + oldLimitPrice);
     }
@@ -389,16 +359,14 @@ implements MarketManager, Initializable, Activatable
     // remaining chances we have to get what we need.
     double newLimitPrice = minPrice; // default value
     int current = timeslotRepo.currentSerialNumber();
-    int remainingTries = (timeslot - current
-                          - Competition.currentCompetition().getDeactivateTimeslotsAhead());
+    int remainingTries = (timeslot - current - Competition.currentCompetition().getDeactivateTimeslotsAhead());
     log.debug("remainingTries: " + remainingTries);
     if (remainingTries > 0) {
-      double range = (minPrice - oldLimitPrice) * 2.0 / (double)remainingTries;
+      double range = (minPrice - oldLimitPrice) * 2.0 / (double) remainingTries;
       log.debug("oldLimitPrice=" + oldLimitPrice + ", range=" + range);
-      double computedPrice = oldLimitPrice + randomGen.nextDouble() * range; 
+      double computedPrice = oldLimitPrice + randomGen.nextDouble() * range;
       return Math.max(newLimitPrice, computedPrice);
-    }
-    else
+    } else
       return null; // market order
   }
 }
