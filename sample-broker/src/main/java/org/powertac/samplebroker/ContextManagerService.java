@@ -62,7 +62,7 @@ implements Initializable
           public void run()
           {
               System.out.println("Printing");
-              PrintService.getInstance().addData();
+              PrintService.getInstance().printData();
               System.out.println("Printed");
           }
       }));

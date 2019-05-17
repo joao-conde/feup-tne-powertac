@@ -1,3 +1,6 @@
+*/.attach_pid*
+.idea
+*_data.csv
 # Compiled class file
 *.class
 

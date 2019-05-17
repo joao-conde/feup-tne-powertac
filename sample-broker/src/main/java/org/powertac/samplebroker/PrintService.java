@@ -7,8 +7,8 @@ import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +21,7 @@ public class PrintService {
     ArrayList<Integer> timeslots = new ArrayList<>();
     ArrayList<Double> consumptions = new ArrayList<>();;
     ArrayList<Double> productions = new ArrayList<>();;
-    ArrayList<WeatherForecastPrediction> weather =  new ArrayList<>();
+    ArrayList<WeatherForecastPrediction> weather = new ArrayList<>();
     ArrayList<Double> imbalances = new ArrayList<>();
     Double tempAsks = 0.0;
     Double tempBids = 0.0;
@@ -42,16 +42,16 @@ public class PrintService {
         return initialized;
     }
 
-    public void startCSV(){
+    public void startCSV() {
         try {
-            FileWriter writer = new FileWriter(System.currentTimeMillis() + "_data.csv", true);
+            FileWriter writer = new FileWriter(new Date(System.currentTimeMillis()).toString() + "_data.csv", true);
             out = new BufferedWriter(writer);
-            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast,ClearedQuantity,ClearedQuantity24h,Bids,Asks,Imbalance,Imbalance1h,Imbalance24h,Imbalance1hSign,Imbalance24hSign\n");
+            out.write(
+                    "Timeslot,CT,C24,C23,C22,C21,C20,C19,C18,C17,C16,C15,C14,C13,C12,C11,C10,C9,C8,C7,C6,C5,C4,C3,C2,C1,CN\n");
             initialized = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -78,7 +78,6 @@ public class PrintService {
         weather.add(prediction);
         System.out.println("addWeatherForecast");
     }
-    
 
     public void addImbalance(Double imbalance) {
         imbalances.add(imbalance);
@@ -91,36 +90,35 @@ public class PrintService {
     }
 
     public void addClearedQuantity(int timeslot, Double cleared) {
-        if(clearedQuantity.containsKey(timeslot)) {
-            clearedQuantity.put(timeslot, clearedQuantity.get(timeslot)+cleared);
+        if (clearedQuantity.containsKey(timeslot)) {
+            clearedQuantity.put(timeslot, clearedQuantity.get(timeslot) + cleared);
         } else {
             clearedQuantity.put(timeslot, cleared);
-            System.out.println("addClearedQuantity for timeslot "+ timeslot);
+            System.out.println("addClearedQuantity for timeslot " + timeslot);
         }
     }
 
-    public void addData() {
-    
+    public void printData() {
+
+        clearedQuantity.keySet().forEach(t -> System.out.println("timeslot: " + t));
         try {
-            for(int i=0; i<timeslots.size(); i++) {
-                if(i >= 24 && i < timeslots.size() - 24) {
-                    out.write(timeslots.get(i) + "," + numberOfBrokers + "," + numberOfConsumers + "," + consumptions.get(i)
-                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+
-                            weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+
-                            clearedQuantity.get(360+i)+"," + clearedQuantity.get(360+i+24)+","+bidsQuantity.get(i) + "," + asksQuantity.get(i) + "," + imbalances.get(i)+
-                            ","+imbalances.get(i+1) + "," + (imbalances.get(i+24))+ "," + (imbalances.get(i+1) > 0 ? "1" : "-1") + "," + (imbalances.get(i+24) > 0 ? "1" : "-1") + "\n");
+            //System.out.println("Timeslots size: " + timeslots.size());
+            for (int i = 385; i < 360 + timeslots.size()-1; i++) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(i % 24 + ",");
+                for (int j = 24; j > 0; j--) {
+                    sb.append(clearedQuantity.get(i - j).toString() + ",");
                 }
+                sb.append(clearedQuantity.get(i + 1).toString() + ",\n");
+                out.write(sb.toString());
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-        finally {
-            if(out != null) {
+        } finally {
+            if (out != null) {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
