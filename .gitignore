@@ -29,6 +29,7 @@ hs_err_pid*
 #python venv
 env/
 
+*__pycache__/
 .vscode/
 
 # database files
