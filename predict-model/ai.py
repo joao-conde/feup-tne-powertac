@@ -13,7 +13,7 @@ def create_predict_model(verbose):
     y = data['CAN'].values
 
     x_train, x_test, y_train, y_test = model_selection.train_test_split(
-        x, y, test_size=0.5)
+        x, y, test_size=0.3)
 
     regressor = neural_network.MLPRegressor()
     regressor.fit(x_train, y_train)
