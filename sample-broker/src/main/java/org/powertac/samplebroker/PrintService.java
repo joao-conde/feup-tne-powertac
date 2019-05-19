@@ -1,14 +1,15 @@
 package org.powertac.samplebroker;
 
 import org.powertac.common.WeatherForecastPrediction;
+import org.powertac.common.WeatherReport;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,8 @@ public class PrintService {
     ArrayList<Integer> timeslots = new ArrayList<>();
     ArrayList<Double> consumptions = new ArrayList<>();;
     ArrayList<Double> productions = new ArrayList<>();;
-    ArrayList<WeatherForecastPrediction> weather =  new ArrayList<>();
+    Map<Integer, WeatherForecastPrediction> weatherForecast = new HashMap<>();
+    Map<Integer, WeatherReport> weatherReports = new HashMap<>();
     ArrayList<Double> imbalances = new ArrayList<>();
     Double tempAsks = 0.0;
     Double tempBids = 0.0;
@@ -42,16 +44,24 @@ public class PrintService {
         return initialized;
     }
 
-    public void startCSV(){
+    public void startCSV() {
         try {
-            FileWriter writer = new FileWriter(System.currentTimeMillis() + "_data.csv", true);
+            FileWriter writer = new FileWriter(new Date(System.currentTimeMillis()).toString() + "_data.csv", true);
             out = new BufferedWriter(writer);
-            out.write("Timeslot,NoBrokers,NoCustomers,Consumption,Production,Consumption24hAgo,Production24Ago,TempForecast,WindSpeedForecast,WindDirectionForecast,CloudsForecast,ClearedQuantity,ClearedQuantity24h,Bids,Asks,Imbalance,Imbalance1h,Imbalance24h,Imbalance1hSign,Imbalance24hSign\n");
+            // let t be the current timeslot
+            // CAT - Cleared Amount Total - Sum of CA24...CA1
+            // CA24 - Cleared Amount for timeslot t - 24
+            // CAN - Cleared Amount in the Next slot, aka t+1
+            // T24 - Temperature in timeslot t - 24
+            // WS24 - Wind speed in timeslot t - 24
+            // TF1 - Temperature forecast for t + 1
+            // WSF1 - Wind speed forecast for t + 1
+            out.write(
+                    "Timeslot,CAT,CA24,CA23,CA22,CA21,CA20,CA19,CA18,CA17,CA16,CA15,CA14,CA13,CA12,CA11,CA10,CA9,CA8,CA7,CA6,CA5,CA4,CA3,CA2,CA1,T24,WS24,T23,WS23,T22,WS22,T21,WS21,T20,WS20,T19,WS19,T18,WS18,T17,WS17,T16,WS16,T15,WS15,T14,WS14,T13,WS13,T12,WS12,T11,WS11,T10,WS10,T9,WS9,T8,WS8,T7,WS7,T6,WS6,T5,WS5,T4,WS4,T3,WS3,T2,WS2,T1,WS1,TF1,WSF1,CAN\n");
             initialized = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -74,11 +84,15 @@ public class PrintService {
         System.out.println("addBrokersAndConsumers");
     }
 
-    public void addWeatherForecast(WeatherForecastPrediction prediction) {
-        weather.add(prediction);
-        System.out.println("addWeatherForecast");
+    public void addWeatherReport(WeatherReport report) {
+        weatherReports.put(report.getTimeslotIndex(), report);
     }
-    
+
+    public void addWeatherForecast(int timeslot, WeatherForecastPrediction prediction) {
+        
+        weatherForecast.put(timeslot, prediction);
+        System.out.println("addWeatherForecast for timeslot" + timeslot);
+    }
 
     public void addImbalance(Double imbalance) {
         imbalances.add(imbalance);
@@ -91,36 +105,46 @@ public class PrintService {
     }
 
     public void addClearedQuantity(int timeslot, Double cleared) {
-        if(clearedQuantity.containsKey(timeslot)) {
-            clearedQuantity.put(timeslot, clearedQuantity.get(timeslot)+cleared);
+        if (clearedQuantity.containsKey(timeslot)) {
+            clearedQuantity.put(timeslot, clearedQuantity.get(timeslot) + cleared);
         } else {
             clearedQuantity.put(timeslot, cleared);
-            System.out.println("addClearedQuantity for timeslot "+ timeslot);
+            System.out.println("addClearedQuantity for timeslot " + timeslot);
         }
     }
 
-    public void addData() {
-    
+    public void printData() {
+
+        clearedQuantity.keySet().forEach(t -> System.out.println("timeslot: " + t));
         try {
-            for(int i=0; i<timeslots.size(); i++) {
-                if(i >= 24 && i < timeslots.size() - 24) {
-                    out.write(timeslots.get(i) + "," + numberOfBrokers + "," + numberOfConsumers + "," + consumptions.get(i)
-                        + "," + productions.get(i) +","+ consumptions.get(i-24)+","+ productions.get(i-24)+","+weather.get(i).getTemperature()+","+
-                            weather.get(i).getWindSpeed()+","+weather.get(i).getWindDirection()+","+weather.get(i).getCloudCover()+","+
-                            clearedQuantity.get(360+i)+"," + clearedQuantity.get(360+i+24)+","+bidsQuantity.get(i) + "," + asksQuantity.get(i) + "," + imbalances.get(i)+
-                            ","+imbalances.get(i+1) + "," + (imbalances.get(i+24))+ "," + (imbalances.get(i+1) > 0 ? "1" : "-1") + "," + (imbalances.get(i+24) > 0 ? "1" : "-1") + "\n");
+            //System.out.println("Timeslots size: " + timeslots.size());
+            for (int i = 385; i < 360 + timeslots.size()-1; i++) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(i % 24 + ",");
+                double sumClearedInLast24h = 0;
+                for (int j = 24; j > 0; j--) {
+                    sumClearedInLast24h += clearedQuantity.get(i-j);
                 }
+                sb.append(sumClearedInLast24h + ",");
+                for (int j = 24; j > 0; j--) {
+                    sb.append(clearedQuantity.get(i - j).toString() + ",");
+                }
+                for (int j = 24; j > 0; j--) {
+                    sb.append(weatherReports.get(i - j).getTemperature() + ",");
+                    sb.append(weatherReports.get(i - j).getWindSpeed() + ",");
+                }
+                sb.append(weatherForecast.get(i+1).getTemperature() + ",");
+                sb.append(weatherForecast.get(i+1).getWindSpeed() + ",");
+                sb.append(clearedQuantity.get(i + 1).toString() + ",\n");
+                out.write(sb.toString());
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-        finally {
-            if(out != null) {
+        } finally {
+            if (out != null) {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
