@@ -6,7 +6,7 @@ import ai
 app = FlaskAPI(__name__)
 
 
-@app.route('/predict/', methods=['GET'])
+@app.route('/predict', methods=['POST'])
 def predict():
     prediction = model.predict(request.get_json()['data'])
     return jsonify({'prediction': prediction[0]})
