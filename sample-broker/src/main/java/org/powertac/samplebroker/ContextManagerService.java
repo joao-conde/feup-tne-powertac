@@ -26,6 +26,7 @@ import org.powertac.common.Competition;
 import org.powertac.common.msg.DistributionReport;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
+import org.powertac.samplebroker.services.PrintService;
 import org.springframework.stereotype.Service;
 
 /**

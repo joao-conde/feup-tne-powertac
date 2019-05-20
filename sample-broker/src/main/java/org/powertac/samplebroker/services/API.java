@@ -1,6 +1,5 @@
-package org.powertac.samplebroker;
+package org.powertac.samplebroker.services;
 
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -26,6 +25,6 @@ public class API {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-	}
-   }
+        return "";
+    }
 }
