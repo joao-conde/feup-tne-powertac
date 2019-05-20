@@ -17,6 +17,8 @@ package org.powertac.samplebroker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.SortedSet;
 
@@ -41,11 +43,15 @@ import org.powertac.common.msg.BalanceReport;
 import org.powertac.common.msg.MarketBootstrapData;
 import org.powertac.common.repo.TimeslotRepo;
 import org.powertac.samplebroker.core.BrokerPropertiesService;
+import org.powertac.samplebroker.domain.ClearedPrice;
+import org.powertac.samplebroker.domain.ClearedQuantity;
 import org.powertac.samplebroker.interfaces.Activatable;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
 import org.powertac.samplebroker.interfaces.MarketManager;
 import org.powertac.samplebroker.interfaces.PortfolioManager;
+import org.powertac.samplebroker.repos.ClearedPriceRepo;
+import org.powertac.samplebroker.repos.ClearedQuantityRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +75,15 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
 
   @Autowired
   private PortfolioManager portfolioManager;
+
+  @Autowired
+  private API api;
+
+  @Autowired
+  private ClearedQuantityRepo clearedQuantityRepo;
+
+  @Autowired
+  private ClearedPriceRepo clearedPriceRepo;
 
   // ------------ Configurable parameters --------------
   // max and min offer prices. Max means "sure to trade"
@@ -98,7 +113,6 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double[] marketMWh;
   private double[] marketPrice;
   private double meanMarketPrice = 0.0;
-  private ArrayList<Double> clearedMwh = new ArrayList<>();
   private ArrayList<Double> balacingQuantity = new ArrayList<>();
   private ArrayList<Double> balacingPrice = new ArrayList<>();
 
@@ -165,7 +179,25 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    * of market prices.
    */
   public synchronized void handleMessage(ClearedTrade ct) {
-    PrintService.getInstance().addClearedQuantity(ct.getTimeslotIndex(), ct.getExecutionPrice());
+    Optional<ClearedQuantity> optClearedQty = clearedQuantityRepo.findById(ct.getTimeslotIndex());
+    if (optClearedQty.isPresent()) {
+      ClearedQuantity qt = optClearedQty.get();
+      qt.addQuantity(ct.getExecutionMWh());
+      clearedQuantityRepo.save(qt);
+    } else {
+      clearedQuantityRepo.save(new ClearedQuantity(ct.getTimeslotIndex(), ct.getExecutionMWh()));
+    }
+    Optional<ClearedPrice> optClearedPrice = clearedPriceRepo.findById(ct.getTimeslotIndex());
+    if (optClearedPrice.isPresent()) {
+      ClearedPrice qt = optClearedPrice.get();
+      qt.addPrice(ct.getExecutionPrice());
+      clearedPriceRepo.save(qt);
+    } else {
+      clearedPriceRepo.save(new ClearedPrice(ct.getTimeslotIndex(), ct.getExecutionPrice()));
+    }
+
+    
+    
     // System.out.println("Cleared for "+ct.getTimeslotIndex()+" by
     // "+ct.getExecutionMWh());
     log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + "; Price: " + ct.getExecutionPrice() + " timeslot: "
@@ -307,6 +339,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       neededKWh = portfolioManager.collectUsage(index);
       submitOrder(neededKWh, timeslot.getSerialNumber());
     }
+
+    api.getPrediction(data);
   }
 
   /**
