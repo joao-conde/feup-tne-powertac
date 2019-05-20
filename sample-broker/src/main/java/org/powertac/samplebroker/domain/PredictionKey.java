@@ -15,6 +15,27 @@ public class PredictionKey implements Serializable {
         this.setFutureTimeslot(predictTimeslot);
     }
 
+    @Override
+    public int hashCode() {
+        return generatedTimeslot * futureTimeslot - futureTimeslot;
+    }
+ 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PredictionKey other = (PredictionKey) obj;
+        if (generatedTimeslot != other.generatedTimeslot)
+            return false;
+        if (futureTimeslot != other.futureTimeslot)
+            return false;
+        return true;
+    }
+
     public Integer getFutureTimeslot() {
         return futureTimeslot;
     }

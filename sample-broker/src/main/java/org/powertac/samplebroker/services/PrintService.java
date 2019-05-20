@@ -18,6 +18,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class PrintService {
 
+
+    @Autowired
+    private ClearedService clearedService;
+    
     private static PrintService printer;
 
     BufferedWriter out = null;
@@ -33,17 +37,13 @@ public class PrintService {
     Integer numberOfConsumers;
     Boolean initialized = false;
 
-    @Autowired
-    ClearedRepo clearedRepo;
 
-    @Autowired
-    private WeatherForecastRepo weatherForecastRepo;
+    private WeatherForecastRepo weatherForecastRepo = new WeatherForecastRepo();
+
+    private WeatherReportRepo weatherReportRepo = new WeatherReportRepo();
   
-    @Autowired
-    private WeatherReportRepo weatherReportRepo;
+    private ClearedRepo clearedRepo = new ClearedRepo();
 
-    @Autowired
-    private ClearedService clearedService;
 
     public static PrintService getInstance() {
         if (printer == null)
@@ -131,19 +131,19 @@ public class PrintService {
                 for (int j = 24; j > 0; j--) {
                     sb.append(clearedService.getTotalClearedForTimeslot(i-j).getQuantity().toString() + ",");
                     sb.append(clearedService.getTotalClearedForTimeslot(i-j).getMeanPrice().toString() + ",");
-                    sb.append(weatherReportRepo.findById(i - j).get().getTemperature() + ",");
-                    sb.append(weatherReportRepo.findById(i-j).get().getWindSpeed() + ",");
+                    sb.append(weatherReportRepo.findById(i - j).getTemperature() + ",");
+                    sb.append(weatherReportRepo.findById(i-j).getWindSpeed() + ",");
                 }
-                sb.append(weatherReportRepo.findById(i).get().getTemperature() + ",");
-                sb.append(weatherReportRepo.findById(i).get().getWindSpeed() + ",");
-                ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).get().getFutureCleared();
+                sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
+                sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
+                ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).getFutureCleared();
                 for (int k = 0; k < partialCleared.size(); k++) {
                     sb.append(partialCleared.get(k).getQuantity() + ",");
                     sb.append(partialCleared.get(k).getMeanPrice() + ",");
                 }
                 for (int j = 1; j <= 24; j++) {
-                    sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).get().getTemperature() + ",");
-                    sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).get().getWindSpeed() + ",");
+                    sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getTemperature() + ",");
+                    sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getWindSpeed() + ",");
                     sb.append(clearedService.getTotalClearedForTimeslot(i + j).getQuantity().toString() + ",");
                     sb.append(clearedService.getTotalClearedForTimeslot(i + j).getMeanPrice().toString() + ",");
                 }

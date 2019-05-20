@@ -1,20 +1,12 @@
 package org.powertac.samplebroker.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-@Entity
 public class Weather {
-
-    @Id
-    private Integer timeslot;
 
     private Double windSpeed;
 
     private Double temperature;
 
-    public Weather(Integer timeslot, Double windSpeed, Double temperature) {
-        this.timeslot = timeslot;
+    public Weather(Double windSpeed, Double temperature) {
         this.setWindSpeed(windSpeed);
         this.setTemperature(temperature);
     }
@@ -33,9 +25,5 @@ public class Weather {
 
     public void setWindSpeed(Double windSpeed) {
         this.windSpeed = windSpeed;
-    }
-
-    public Integer getTimeslot() {
-        return timeslot;
     }
 }

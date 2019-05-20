@@ -45,10 +45,6 @@ implements Initializable
   private double cash = 0;
 
   private ArrayList<Double> cashArray = new ArrayList<>();
-  private ArrayList<Double> totalConsumption = new ArrayList<>();
-  private ArrayList<Double> totalProduction = new ArrayList<>();
-  private int numberofCustomers;
-  private int numberofBrokers;
 
 //  @SuppressWarnings("unchecked")
   @Override

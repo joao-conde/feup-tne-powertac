@@ -17,8 +17,6 @@ package org.powertac.samplebroker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.SortedSet;
 
@@ -45,6 +43,7 @@ import org.powertac.common.repo.TimeslotRepo;
 import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.samplebroker.domain.Cleared;
 import org.powertac.samplebroker.domain.PartialCleared;
+import org.powertac.samplebroker.domain.PredictionKey;
 import org.powertac.samplebroker.domain.Weather;
 import org.powertac.samplebroker.domain.WeatherPrediction;
 import org.powertac.samplebroker.interfaces.Activatable;
@@ -86,16 +85,17 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private API api;
 
   @Autowired
-  private WeatherForecastRepo weatherForecastRepo;
-
-  @Autowired
-  private WeatherReportRepo weatherReportRepo;
-
-  @Autowired
   private ClearedService clearedService;
 
-  @Autowired
-  private ClearedRepo clearedRepo;
+  private WeatherForecastRepo weatherForecastRepo = new WeatherForecastRepo();
+
+  private WeatherReportRepo weatherReportRepo = new WeatherReportRepo();
+
+  private ClearedRepo clearedRepo = new ClearedRepo();
+
+
+
+  
 
   // ------------ Configurable parameters --------------
   // max and min offer prices. Max means "sure to trade"
@@ -127,7 +127,6 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double meanMarketPrice = 0.0;
   private ArrayList<Double> balacingQuantity = new ArrayList<>();
   private ArrayList<Double> balacingPrice = new ArrayList<>();
-  private Integer currentTimeslot = 0;
 
   public MarketManagerService() {
     super();
@@ -295,8 +294,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
         + "; time: " + p.getForecastTime() + "; wind speed: " + p.getWindSpeed()));
     for (int i = 0; i < 24; i++) {
       WeatherForecastPrediction nextDayForecast = forecast.getPredictions().get(i);
-      weatherForecastRepo.save(new WeatherPrediction(forecast.getTimeslotIndex(), forecast.getTimeslotIndex() + i + 1,
-          nextDayForecast.getWindSpeed(), nextDayForecast.getTemperature()));
+      weatherForecastRepo.save(new PredictionKey(forecast.getTimeslotIndex(), forecast.getTimeslotIndex() + i + 1),
+      new WeatherPrediction(nextDayForecast.getWindSpeed(), nextDayForecast.getTemperature()));
     }
   }
 
@@ -307,7 +306,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     log.info("Weather Report received");
     log.info("temp: " + report.getTemperature() + "; clouds: " + report.getCloudCover() + "; wind: "
         + report.getWindSpeed());
-    weatherReportRepo.save(new Weather(report.getTimeslotIndex(), report.getWindSpeed(), report.getTemperature()));
+    weatherReportRepo.save(report.getTimeslotIndex(), new Weather(report.getWindSpeed(), report.getTemperature()));
   }
 
   /**
@@ -317,8 +316,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   public synchronized void handleMessage(BalanceReport report) {
     PrintService.getInstance().addImbalance(report.getNetImbalance());
     ArrayList<PartialCleared> next24Cleared = clearedService.getPartialClearedForNext24Timeslots(report.getTimeslotIndex());
-    Cleared cleared = new Cleared(report.getTimeslotIndex(), next24Cleared);
-    clearedRepo.save(cleared);
+    Cleared cleared = new Cleared(next24Cleared);
+    clearedRepo.save(report.getTimeslotIndex(), cleared);
   }
 
   // ----------- per-timeslot activation ---------------
@@ -331,7 +330,6 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    */
   @Override
   public synchronized void activate(int timeslotIndex) {
-    this.currentTimeslot = timeslotIndex;
     double neededKWh = 0.0;
     log.debug("Current timeslot is " + timeslotRepo.currentTimeslot().getSerialNumber());
     for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {

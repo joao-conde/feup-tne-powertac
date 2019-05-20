@@ -1,10 +1,21 @@
 package org.powertac.samplebroker.repos;
 
-import org.powertac.samplebroker.domain.Weather;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import java.util.HashMap;
 
-@Repository
-public interface WeatherReportRepo extends CrudRepository<Weather, Integer> {
+import org.powertac.samplebroker.domain.Weather;
+
+public class WeatherReportRepo implements IRepo<Integer, Weather> {
+
+    private static HashMap<Integer, Weather> data = new HashMap<>();
+
+    @Override
+    public void save(Integer key, Weather value) {
+        data.put(key, value);
+    }
+
+    @Override
+    public Weather findById(Integer key) {
+        return data.get(key);
+    }
 
 }

@@ -1,10 +1,20 @@
 package org.powertac.samplebroker.repos;
 
-import org.powertac.samplebroker.domain.Cleared;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import java.util.HashMap;
 
-@Repository
-public interface ClearedRepo extends CrudRepository<Cleared, Integer> {
-    
+import org.powertac.samplebroker.domain.Cleared;
+
+public class ClearedRepo implements IRepo<Integer, Cleared> {
+    private static HashMap<Integer, Cleared> data;
+
+    @Override
+    public void save(Integer key, Cleared value) {
+        data.put(key, value);
+    }
+
+    @Override
+    public Cleared findById(Integer key) {
+        return data.get(key);
+    }
+
 }

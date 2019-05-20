@@ -1,20 +1,12 @@
 package org.powertac.samplebroker.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-@Entity
 public class WeatherPrediction {
-
-    @Id
-    private PredictionKey key;
 
     private Double windSpeed;
 
     private Double temperature;
 
-    public WeatherPrediction(Integer currentTimeslot, Integer predictionTimeslot, Double windSpeed, Double temperature) {
-        this.key = new PredictionKey(currentTimeslot, predictionTimeslot);
+    public WeatherPrediction(Double windSpeed, Double temperature) {
         this.setWindSpeed(windSpeed);
         this.setTemperature(temperature);
     }
@@ -33,14 +25,6 @@ public class WeatherPrediction {
 
     public void setWindSpeed(Double windSpeed) {
         this.windSpeed = windSpeed;
-    }
-
-    public Integer getGeneratedTimeslot() {
-        return this.key.getGeneratedTimeslot();
-    }
-
-    public Integer getPredicitonTimeslot() {
-        return this.key.getFutureTimeslot();
     }
 }
 
