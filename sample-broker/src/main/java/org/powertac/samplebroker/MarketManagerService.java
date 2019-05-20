@@ -339,8 +339,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       neededKWh = portfolioManager.collectUsage(index);
       submitOrder(neededKWh, timeslot.getSerialNumber());
     }
-
-    api.getPrediction(data);
+    
   }
 
   /**
