@@ -8,7 +8,7 @@ import org.powertac.samplebroker.domain.PredictionKey;
 
 public class WeatherForecastRepo implements IRepo<PredictionKey, WeatherPrediction> {
 
-    private static HashMap<PredictionKey, WeatherPrediction> data;
+    private static HashMap<PredictionKey, WeatherPrediction> data = new HashMap<>();
 
     @Override
     public void save(PredictionKey key, WeatherPrediction value) {

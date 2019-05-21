@@ -51,11 +51,11 @@ import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
 import org.powertac.samplebroker.interfaces.MarketManager;
 import org.powertac.samplebroker.interfaces.PortfolioManager;
+import org.powertac.samplebroker.repos.ClearedFuturesRepo;
 import org.powertac.samplebroker.repos.ClearedRepo;
 import org.powertac.samplebroker.repos.WeatherForecastRepo;
 import org.powertac.samplebroker.repos.WeatherReportRepo;
 import org.powertac.samplebroker.services.API;
-import org.powertac.samplebroker.services.ClearedService;
 import org.powertac.samplebroker.services.PrintService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,16 +84,13 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   @Autowired
   private API api;
 
-  @Autowired
-  private ClearedService clearedService;
-
   private WeatherForecastRepo weatherForecastRepo = new WeatherForecastRepo();
 
   private WeatherReportRepo weatherReportRepo = new WeatherReportRepo();
 
   private ClearedRepo clearedRepo = new ClearedRepo();
 
-
+  private ClearedFuturesRepo clearedFuturesRepo = new ClearedFuturesRepo();
 
   
 
@@ -191,7 +188,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    * of market prices.
    */
   public synchronized void handleMessage(ClearedTrade ct) {
-    clearedService.updateFutureTimeslot(ct.getTimeslotIndex(), ct.getExecutionMWh(), ct.getExecutionPrice());
+    System.out.println("Received ct for index: " + ct.getTimeslotIndex());
+    clearedFuturesRepo.updateFutureTimeslot(ct.getTimeslotIndex(), ct.getExecutionMWh(), ct.getExecutionPrice());
   
     // System.out.println("Cleared for "+ct.getTimeslotIndex()+" by
     // "+ct.getExecutionMWh());
@@ -315,7 +313,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    */
   public synchronized void handleMessage(BalanceReport report) {
     PrintService.getInstance().addImbalance(report.getNetImbalance());
-    ArrayList<PartialCleared> next24Cleared = clearedService.getPartialClearedForNext24Timeslots(report.getTimeslotIndex());
+    ArrayList<PartialCleared> next24Cleared = clearedFuturesRepo.getPartialClearedForNext24Timeslots(report.getTimeslotIndex());
     Cleared cleared = new Cleared(next24Cleared);
     clearedRepo.save(report.getTimeslotIndex(), cleared);
   }
@@ -336,6 +334,9 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       int index = (timeslot.getSerialNumber()) % broker.getUsageRecordLength();
       neededKWh = portfolioManager.collectUsage(index);
       submitOrder(neededKWh, timeslot.getSerialNumber());
+    }
+    if (timeslotIndex == 425) {
+      PrintService.getInstance().printData();
     }
     
   }

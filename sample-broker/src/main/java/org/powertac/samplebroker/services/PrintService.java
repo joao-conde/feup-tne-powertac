@@ -9,19 +9,15 @@ import java.util.Date;
 
 import org.powertac.samplebroker.domain.PartialCleared;
 import org.powertac.samplebroker.domain.PredictionKey;
+import org.powertac.samplebroker.repos.ClearedFuturesRepo;
 import org.powertac.samplebroker.repos.ClearedRepo;
 import org.powertac.samplebroker.repos.WeatherForecastRepo;
 import org.powertac.samplebroker.repos.WeatherReportRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PrintService {
 
-
-    @Autowired
-    private ClearedService clearedService;
-    
     private static PrintService printer;
 
     BufferedWriter out = null;
@@ -43,6 +39,8 @@ public class PrintService {
     private WeatherReportRepo weatherReportRepo = new WeatherReportRepo();
   
     private ClearedRepo clearedRepo = new ClearedRepo();
+
+    private ClearedFuturesRepo clearedFuturesRepo = new ClearedFuturesRepo();
 
 
     public static PrintService getInstance() {
@@ -129,14 +127,15 @@ public class PrintService {
                 sb.append(i % 24 + ",");
                 sb.append(i % 168 + ",");
                 for (int j = 24; j > 0; j--) {
-                    sb.append(clearedService.getTotalClearedForTimeslot(i-j).getQuantity().toString() + ",");
-                    sb.append(clearedService.getTotalClearedForTimeslot(i-j).getMeanPrice().toString() + ",");
+                    sb.append(clearedFuturesRepo.findById(i-j).getQuantity().toString() + ",");
+                    sb.append(clearedFuturesRepo.findById(i-j).getMeanPrice().toString() + ",");
                     sb.append(weatherReportRepo.findById(i - j).getTemperature() + ",");
                     sb.append(weatherReportRepo.findById(i-j).getWindSpeed() + ",");
                 }
                 sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
                 sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
                 ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).getFutureCleared();
+                System.out.println("partial cleared: " + partialCleared);
                 for (int k = 0; k < partialCleared.size(); k++) {
                     sb.append(partialCleared.get(k).getQuantity() + ",");
                     sb.append(partialCleared.get(k).getMeanPrice() + ",");
@@ -144,8 +143,8 @@ public class PrintService {
                 for (int j = 1; j <= 24; j++) {
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getTemperature() + ",");
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getWindSpeed() + ",");
-                    sb.append(clearedService.getTotalClearedForTimeslot(i + j).getQuantity().toString() + ",");
-                    sb.append(clearedService.getTotalClearedForTimeslot(i + j).getMeanPrice().toString() + ",");
+                    sb.append(clearedFuturesRepo.findById(i + j).getQuantity().toString() + ",");
+                    sb.append(clearedFuturesRepo.findById(i + j).getMeanPrice().toString() + ",");
                 }
                 
                 out.write(sb.toString());
