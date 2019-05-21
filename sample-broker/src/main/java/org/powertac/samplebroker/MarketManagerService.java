@@ -44,6 +44,7 @@ import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.samplebroker.domain.Cleared;
 import org.powertac.samplebroker.domain.PartialCleared;
 import org.powertac.samplebroker.domain.PredictionKey;
+import org.powertac.samplebroker.domain.PredictionResponse;
 import org.powertac.samplebroker.domain.Weather;
 import org.powertac.samplebroker.domain.WeatherPrediction;
 import org.powertac.samplebroker.interfaces.Activatable;
@@ -336,8 +337,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       submitOrder(neededKWh, timeslot.getSerialNumber());
     }
     if (this.currentTimeslot >= 386) {
-      String result = api.getPrediction(this.currentTimeslot);
-      System.out.println(result);
+      PredictionResponse prediction = api.getPrediction(this.currentTimeslot);
     }
 
   }

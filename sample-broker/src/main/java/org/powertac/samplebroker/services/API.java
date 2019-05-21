@@ -10,6 +10,7 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.powertac.samplebroker.domain.PartialCleared;
+import org.powertac.samplebroker.domain.PredictionResponse;
 import org.powertac.samplebroker.domain.PredictionKey;
 import org.powertac.samplebroker.repos.ClearedFuturesRepo;
 import org.powertac.samplebroker.repos.ClearedRepo;
@@ -35,7 +36,7 @@ public class API {
 
     private Gson gson = new Gson();
 
-    public String getPrediction(Integer timeslot) {
+    public PredictionResponse getPrediction(Integer timeslot) {
         String data = buildPredictionData(timeslot-1);
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost("http://localhost:5000/predict/");
@@ -47,9 +48,12 @@ public class API {
             httpPost.setEntity(stringEntity);
 
             CloseableHttpResponse response = httpClient.execute(httpPost);
-            return new BasicResponseHandler().handleResponse(response);
+            String prediction = new BasicResponseHandler().handleResponse(response);
+            PredictionResponse predictionResponse = gson.fromJson(prediction, PredictionResponse.class);
+            System.out.println(predictionResponse.getPrediction());
+            return predictionResponse;
         } catch (Exception e) {
-            return "";
+            return new PredictionResponse();
         }
     }
 
@@ -78,10 +82,12 @@ public class API {
             sb.append(partialCleared.get(k).getMeanPrice() + ",");
         }
 
-        for (int j = 1; j <= 24; j++) {
+        for (int j = 1; j <= 23; j++) {
             sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + j)).getTemperature() + ",");
             sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + j)).getWindSpeed() + ",");
         }
+        sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + 24)).getTemperature() + ",");
+        sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + 24)).getWindSpeed());
         sb.append("]]}");
         return sb.toString();
     }
