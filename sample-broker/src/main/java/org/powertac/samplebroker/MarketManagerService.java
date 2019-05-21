@@ -294,9 +294,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     for (int i = 0; i < 24; i++) {
       WeatherForecastPrediction nextDayForecast = forecast.getPredictions().get(i);
       PredictionKey key = new PredictionKey(forecast.getTimeslotIndex(), forecast.getTimeslotIndex() + i + 1);
-      weatherForecastRepo.save(
-        key,
-        new WeatherPrediction(nextDayForecast.getWindSpeed(), nextDayForecast.getTemperature()));
+      weatherForecastRepo.save(key,
+          new WeatherPrediction(nextDayForecast.getWindSpeed(), nextDayForecast.getTemperature()));
     }
   }
 
@@ -336,6 +335,10 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       neededKWh = portfolioManager.collectUsage(index);
       submitOrder(neededKWh, timeslot.getSerialNumber());
     }
+    if (this.currentTimeslot >= 386) {
+      String result = api.getPrediction(this.currentTimeslot);
+      System.out.println(result);
+    }
 
   }
 
@@ -358,6 +361,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     lastOrder.put(timeslot, order);
     broker.sendMessage(order);
   }
+
 
   /**
    * Computes a limit price with a random element.

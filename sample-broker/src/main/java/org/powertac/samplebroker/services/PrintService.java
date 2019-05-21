@@ -80,7 +80,10 @@ public class PrintService {
                 sb.append("PCA"+i+",PCP"+i+",");
             }
             for (int i = 1; i <= 24; i++) {
-                sb.append("TF"+i+",WSF"+i+",TCA"+i+",TCP"+i+",");
+                sb.append("TF"+i+",WSF"+i+",");
+            }
+            for (int i = 1; i <= 24; i++) {
+                sb.append("TCA"+i+",TCP"+i+",");
             }
             out.write(sb.toString() + "\n");
             initialized = true;
@@ -143,6 +146,8 @@ public class PrintService {
                 for (int j = 1; j <= 24; j++) {
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getTemperature() + ",");
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getWindSpeed() + ",");
+                }
+                for (int j = 1; j <= 24; j++) {
                     sb.append(clearedFuturesRepo.findById(i + j).getQuantity().toString() + ",");
                     sb.append(clearedFuturesRepo.findById(i + j).getMeanPrice().toString() + ",");
                 }
