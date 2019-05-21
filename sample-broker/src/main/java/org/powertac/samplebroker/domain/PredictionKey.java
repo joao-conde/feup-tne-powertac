@@ -17,7 +17,7 @@ public class PredictionKey implements Serializable {
 
     @Override
     public int hashCode() {
-        return generatedTimeslot * futureTimeslot - futureTimeslot;
+        return 31 * generatedTimeslot + futureTimeslot;
     }
  
     @Override
@@ -26,12 +26,10 @@ public class PredictionKey implements Serializable {
             return true;
         if (obj == null)
             return false;
-        if (getClass() != obj.getClass())
-            return false;
         PredictionKey other = (PredictionKey) obj;
-        if (generatedTimeslot != other.generatedTimeslot)
+        if (generatedTimeslot.intValue() != other.generatedTimeslot.intValue())
             return false;
-        if (futureTimeslot != other.futureTimeslot)
+        if (futureTimeslot.intValue() != other.futureTimeslot.intValue())
             return false;
         return true;
     }

@@ -71,7 +71,7 @@ public class PrintService {
             // PCP - Partial Cleared Price
             // TCP - Total Cleared Price
             StringBuilder sb = new StringBuilder();
-            sb.append("Timeslot,WeekDay");
+            sb.append("Timeslot,WeekDay,");
             for (int i = 24; i > 0; i--) {
                 sb.append("CA"+i+",CP"+i+",T"+i+",WS"+i+",");
             }
@@ -135,18 +135,18 @@ public class PrintService {
                 sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
                 sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
                 ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).getFutureCleared();
-                System.out.println("partial cleared: " + partialCleared);
                 for (int k = 0; k < partialCleared.size(); k++) {
                     sb.append(partialCleared.get(k).getQuantity() + ",");
                     sb.append(partialCleared.get(k).getMeanPrice() + ",");
                 }
+
                 for (int j = 1; j <= 24; j++) {
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getTemperature() + ",");
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getWindSpeed() + ",");
                     sb.append(clearedFuturesRepo.findById(i + j).getQuantity().toString() + ",");
                     sb.append(clearedFuturesRepo.findById(i + j).getMeanPrice().toString() + ",");
                 }
-                
+                sb.append("\n");
                 out.write(sb.toString());
             }
         } catch (IOException e) {
