@@ -124,7 +124,6 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double meanMarketPrice = 0.0;
   private ArrayList<Double> balacingQuantity = new ArrayList<>();
   private ArrayList<Double> balacingPrice = new ArrayList<>();
-  private boolean isWholesaleAlgorithmRunning = false;
   private int currentTimeslot;
   private int sellingIndex;
   private int buyingIndex = 0;
@@ -189,7 +188,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     // "+tx.getCharge());
     balacingQuantity.add(tx.getKWh());
     balacingPrice.add(tx.getCharge());
-    log.info("Balancing tx: " + tx.getCharge());
+    System.out.println("Balancing charge: " + tx.getCharge());
   }
 
   /**
@@ -210,7 +209,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    * Handles a DistributionTransaction - charges for transporting power
    */
   public synchronized void handleMessage(DistributionTransaction dt) {
-    log.info("Distribution tx: " + dt.getCharge());
+    //System.out.println("Distribution charge: " + dt.getCharge());
   }
 
   /**
@@ -218,7 +217,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    * demand over the recent past.
    */
   public synchronized void handleMessage(CapacityTransaction dt) {
-    log.info("Capacity tx: " + dt.getCharge());
+    //System.out.println("Capacity charge: " + dt.getCharge());
   }
 
   /**
@@ -339,7 +338,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   public synchronized void activate(int timeslotIndex) {
     double neededMWh = 0.0;
     this.currentTimeslot = timeslotIndex;
-    log.debug("Current timeslot is " + timeslotRepo.currentTimeslot().getSerialNumber());
+    System.out.println("Timeslot " + timeslotRepo.currentTimeslot().getSerialNumber());
     /*for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
       int index = (timeslot.getSerialNumber()) % broker.getUsageRecordLength();
       neededMWh = portfolioManager.collectUsage(index) / 1000.0;
@@ -365,21 +364,32 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       Double averagePrice = averagePrice(prices);
       for(Integer i=0; i<prices.size(); i++) {
         if(prices.get(i) <= averagePrice) {
-          submitOrder(25, -prices.get(i), 386+i+1);
+          submitOrder(10, -prices.get(i) * 0.8, 386+i+1);
         } else {
-          submitOrder(-25, prices.get(i), 386+i+1);
+          submitOrder(-10, prices.get(i) * 1.2, 386+i+1);
         }
       }      
     }
     else if(this.currentTimeslot > 386){
+      Double energyBalance = broker.getBroker().findMarketPositionByTimeslot(this.currentTimeslot).getOverallBalance();
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
       ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
       Double averagePrice = averagePrice(prices);
       int lastPriceIdx = prices.size() - 1;
-      if(prices.get(lastPriceIdx) <= averagePrice) {
-        submitOrder(25, -prices.get(lastPriceIdx), this.currentTimeslot + 24);
-      } else {
-        submitOrder(-25, prices.get(lastPriceIdx), this.currentTimeslot + 24);
+      System.out.println("Energy balance: " + energyBalance);
+      if(energyBalance == 0){
+        if(prices.get(lastPriceIdx) <= averagePrice) {
+          submitOrder(10, -prices.get(lastPriceIdx) * 0.6, this.currentTimeslot + 24);
+        }
+        else{
+          submitOrder(-10, prices.get(lastPriceIdx) * 1.2, this.currentTimeslot + 24);
+        }
+      }
+      else if(energyBalance > 0){
+        submitOrder(-energyBalance, prices.get(0) * 0.8, this.currentTimeslot + 1);
+      }
+      else if(energyBalance < 0){
+        submitOrder(-energyBalance, -prices.get(0) * 1.2, this.currentTimeslot + 1);
       }
     }
   }

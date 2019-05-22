@@ -113,7 +113,6 @@ public class PrintService {
 
     public void printData() {
         try {
-            //System.out.println("Timeslots size: " + timeslots.size());
             for (int i = 385; i < 360 + timeslots.size()-25; i++) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(i % 24 + ",");
