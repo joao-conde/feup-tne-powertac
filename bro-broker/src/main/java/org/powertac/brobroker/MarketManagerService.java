@@ -358,8 +358,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     if (this.currentTimeslot >= 386) {
       if (!isWholesaleAlgorithmRunning) {
         PredictionResponse prediction = api.getPrediction(this.currentTimeslot);
-        ArrayList<Double> prices = prediction.getPredictedPrices();
-        ArrayList<Double> amounts = prediction.getPredictedAmounts();
+        ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
+        ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
         System.out.println("Predicted Prices");
         System.out.println(prices);
         System.out.println("Predicted Amounts");

@@ -9,26 +9,11 @@ public class PredictionResponse {
     @JsonProperty
     private ArrayList<Double> prediction;
 
-    public ArrayList<Double> getPrediction() {
+    public ArrayList<Double> getArray() {
         return prediction;
     }
 
     public void setPrediction(ArrayList<Double> prediction) {
         this.prediction = prediction;
-    }
-
-    public ArrayList<Double> getPredictedAmounts() {
-        ArrayList<Double> amounts = new ArrayList<>();
-        for (int i = 0; i < prediction.size(); i+=2) {
-            amounts.add(prediction.get(i));
-        }
-        return amounts;
-    }
-    public ArrayList<Double> getPredictedPrices() {
-        ArrayList<Double> prices = new ArrayList<>();
-        for (int i = 1; i < prediction.size(); i+=2) {
-            prices.add(prediction.get(i));
-        }
-        return prices;
     }
 }

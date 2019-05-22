@@ -32,10 +32,10 @@ public class API {
 
     private Gson gson = new Gson();
 
-    public PredictionResponse getPrediction(Integer timeslot) {
+    private PredictionResponse getPrediction(Integer timeslot, String url) {
         String data = buildPredictionData(timeslot-1);
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("http://localhost:5000/predict/");
+        HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader("Content-type", "application/json");
         try {
             System.out.println("data being sent");
@@ -46,7 +46,7 @@ public class API {
             CloseableHttpResponse response = httpClient.execute(httpPost);
             String prediction = new BasicResponseHandler().handleResponse(response);
             PredictionResponse predictionResponse = gson.fromJson(prediction, PredictionResponse.class);
-            System.out.println(predictionResponse.getPrediction());
+            System.out.println(predictionResponse.getArray());
             return predictionResponse;
         } catch (Exception e) {
             return new PredictionResponse();
@@ -89,4 +89,12 @@ public class API {
         sb.append("]]}");
         return sb.toString();
     }
+
+	public ArrayList<Double> predictAmounts(int currentTimeslot) {
+        return getPrediction(currentTimeslot, "http://localhost:5000/predict/energy").getArray();
+	}
+
+	public ArrayList<Double> predictPrices(int currentTimeslot) {
+        return getPrediction(currentTimeslot, "http://localhost:5000/predict/price").getArray();
+	}
 }
