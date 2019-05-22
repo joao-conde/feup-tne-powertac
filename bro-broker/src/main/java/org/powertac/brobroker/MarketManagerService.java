@@ -391,7 +391,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   }
 
   private void sellShit() {
-    submitOrder(buyingOrderQuantity, -sellingPrice, sellingIndex);
+    submitOrder(-buyingOrderQuantity, sellingPrice, sellingIndex);
   }
 
   /**
