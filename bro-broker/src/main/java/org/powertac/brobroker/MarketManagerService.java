@@ -351,7 +351,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       }
       submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
     }
-    //doWholesaleShit();
+    doWholesaleShit();
   }
 
   private void doWholesaleShit() {
@@ -359,10 +359,13 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       if (!isShitRunning) {
         PredictionResponse prediction = api.getPrediction(this.currentTimeslot);
         ArrayList<Double> prices = prediction.getPredictedPrices();
-        System.out.println("Prices");
-        System.out.println(prices);
         ArrayList<Double> amounts = prediction.getPredictedAmounts();
+        System.out.println("Predicted Prices");
+        System.out.println(prices);
+        System.out.println("Predicted Amounts");
+        System.out.println(amounts);
         buyShit(prices, amounts);
+        isShitRunning = true;
         // check if can sell
       } else {
         ArrayList<Order> ordersAtBuyingIndex = lastOrders.get(buyingIndex);
@@ -401,6 +404,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   }
 
   private void buyShit(ArrayList<Double> prices, ArrayList<Double> amounts) {
+    System.out.println("Buying");
     Pair<Integer, Integer> pricesMaxDiff = MaxDifference.maxDiff(prices);
     Integer maxPriceIndex = pricesMaxDiff.cdr();
     Integer minPriceIndex = pricesMaxDiff.car();
@@ -409,13 +413,16 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     sellingPrice = prices.get(maxPriceIndex);
     Double predictedMaxAmount = amounts.get(maxPriceIndex);
     System.out.println("Min price index: " + minPriceIndex + "; max price index: " + maxPriceIndex);
-    Double alreadyClearedQuantityForMax = clearedFuturesRepo.findById(currentTimeslot + maxPriceIndex + 1).getQuantity();
+    Double alreadyClearedQuantityForMax = 0.0;
+    if (maxPriceIndex < 23) {
+      alreadyClearedQuantityForMax = clearedFuturesRepo.findById(currentTimeslot + maxPriceIndex + 1).getQuantity();
+    }
     buyingOrderQuantity = predictedMaxAmount - alreadyClearedQuantityForMax;
     submitOrder(buyingOrderQuantity, prices.get(minPriceIndex), buyingIndex);
-    isShitRunning = true;
   }
 
   private void sellShit() {
+    System.out.println("Selling");
     submitOrder(-buyingOrderQuantity, sellingPrice, sellingIndex);
   }
 
