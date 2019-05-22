@@ -352,8 +352,8 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
   // fixed-rate two-part tariffs that give the broker a fixed margin.
   private void createInitialTariffs() {
 
-    //for (PowerType pt : customerProfiles.keySet()) {
-      TariffSpecification spec = new TariffSpecification(brokerContext.getBroker(), PowerType.PRODUCTION);
+    for (PowerType pt : customerProfiles.keySet()) {
+      TariffSpecification spec = new TariffSpecification(brokerContext.getBroker(), pt);
       Rate rate = new Rate().withValue(-1.5); // they will pay us 1.5$/KWh;
       spec.addRate(rate);
       RegulationRate rr = new RegulationRate();
@@ -361,7 +361,7 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
       spec.addRate(rr);
       tariffRepo.addSpecification(spec);
       brokerContext.sendMessage(spec);
-    //}
+    }
     
   }
 

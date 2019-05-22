@@ -358,53 +358,41 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   }
 
   private void doWholesaleMagic() {
-    if (this.currentTimeslot >= 386) {
-      if (!isWholesaleAlgorithmRunning) {
-        ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
-        ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
-        buyInWholesale(prices, amounts);
-        isWholesaleAlgorithmRunning = true;
-        // check if can sell
+    //place first 24h orders
+    if (this.currentTimeslot == 386) {
+      ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
+      ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
+      Double averagePrice = averagePrice(prices);
+      for(Integer i=0; i<prices.size(); i++) {
+        if(prices.get(i) <= averagePrice) {
+          submitOrder(25, -prices.get(i), 386+i+1);
+        } else {
+          submitOrder(-25, prices.get(i), 386+i+1);
+        }
+      }      
+    }
+    else if(this.currentTimeslot > 386){
+      ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
+      ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
+      Double averagePrice = averagePrice(prices);
+      int lastPriceIdx = prices.size() - 1;
+      if(prices.get(lastPriceIdx) <= averagePrice) {
+        submitOrder(25, -prices.get(lastPriceIdx), this.currentTimeslot + 24);
       } else {
-        ArrayList<Order> ordersAtBuyingIndex = lastOrders.get(buyingIndex);
-        ArrayList<Order> ordersAtSellingIndex = lastOrders.get(sellingIndex);
-        Boolean isBuyingOrderCleared = true;
-        Boolean isSellingOrderCleared = true;
-        for (Order o: ordersAtBuyingIndex) {
-          if (Math.abs(o.getMWh()) == buyingOrderQuantity) {
-            isBuyingOrderCleared = false;
-            break;
-          }
-        }
-        if(ordersAtSellingIndex != null) {
-          for (Order o: ordersAtSellingIndex) {
-            if (Math.abs(o.getMWh()) == buyingOrderQuantity) {
-              isSellingOrderCleared = false;
-              break;
-            }
-          }
-        }
-
-        if (isBuyingOrderCleared && !isSellingOrderCleared) {
-          // buying order was cleared, we can now try to sell it
-          sellInWholesale();
-        } else if(isBuyingOrderCleared && isSellingOrderCleared) {
-          sellingIndex = 0;
-          System.out.println("Sold");
-          isWholesaleAlgorithmRunning = false;
-        }
-        else {
-          System.out.println("isBuyingOrderCleared: " + isBuyingOrderCleared);
-          System.out.println("isSellingOrderCleared: " + isSellingOrderCleared);
-          System.out.println("isWholesaleAlgorithmRunning: " + isWholesaleAlgorithmRunning);
-          System.out.println("selling index: " + sellingIndex);
-        }
-        if(currentTimeslot == sellingIndex) {
-          System.out.println("Didn't sell");
-          isWholesaleAlgorithmRunning = false;
-        }
+        submitOrder(-25, prices.get(lastPriceIdx), this.currentTimeslot + 24);
       }
     }
+  }
+
+  private Double averagePrice(ArrayList<Double> prices) {
+      Double sum = 0.0;
+      if(!prices.isEmpty()) {
+        for (Double price : prices) {
+            sum += price;
+        }
+        return sum.doubleValue() / prices.size();
+      }
+      return sum;
   }
 
   private double computeLimitPrice(int timeslot) {
