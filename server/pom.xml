@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+      Bundle pom for Powertac server, and parent of all server modules.
+      To build the server, mvn clean install
+      To generate javadocs, mvn javadoc:aggregate
+   -->
+
+  <artifactId>powertac-server</artifactId>
+  <version>1.6.0</version>
+  <packaging>pom</packaging>
+
+  <name>Power TAC server modules</name>
+  <url>https://github.com/powertac/powertac-server/</url>
+
+  <parent>
+    <groupId>org.powertac</groupId>
+    <artifactId>powertac-parent</artifactId>
+    <version>1.6.0</version>
+    <relativePath />
+  </parent>
+
+  <properties>
+    <powertac.version>1.6.0</powertac.version>
+  </properties>
+
+  <!-- Common dependencies across all server modules -->
+  <dependencies>
+    <dependency>
+      <groupId>org.powertac</groupId>
+      <artifactId>common</artifactId>
+      <version>${powertac.version}</version>
+    </dependency>
+
+    <!-- Testing - not inherited from common due to test scope -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <!-- Server components -->
+  <modules>
+    <module>server-interface</module>
+    <module>accounting</module>
+    <module>auctioneer</module>
+    <module>balancing-market</module>
+    <module>customer-models</module>
+    <module>evcustomer</module>
+    <module>default-broker</module>
+    <module>distribution-utility</module>
+    <module>factored-customer</module>
+    <module>genco</module>
+    <module>household-customer</module>
+    <module>officecomplex-customer</module>
+    <module>logtool-core</module>
+    <module>server-main</module>
+    <module>visualizer2</module>
+  </modules>
+
+
+  <reporting>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <inherited>false</inherited>
+            <reports>
+              <report>aggregate</report>
+              <report>test-aggregate</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+        <configuration>
+          <includeDependencySources>true</includeDependencySources>
+          <includeTransitiveDependencySources>true</includeTransitiveDependencySources>
+          <dependencySourceIncludes>
+            <dependencySourceInclude>org.powertac:*</dependencySourceInclude>
+          </dependencySourceIncludes>
+        </configuration>
+      </plugin>
+
+    </plugins>
+
+  </reporting>
+  
+  <!-- Sonatype OSS repo for resolving snapshot dependencies -->
+  <repositories>
+    <repository>
+      <id>sonatype</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <scm>
+    <connection>scm:git:git//github.com/powertac/powertac-server.git</connection>
+    <developerConnection>scm:git:git@github.com:powertac/powertac-server.git</developerConnection>
+    <url>https://github.com/powertac/powertac-server/</url>
+    <tag>powertac-server-1.6.0</tag>
+  </scm>
+
+</project>
