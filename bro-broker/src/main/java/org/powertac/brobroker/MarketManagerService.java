@@ -53,7 +53,6 @@ import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.brobroker.domain.Cleared;
 import org.powertac.brobroker.domain.PartialCleared;
 import org.powertac.brobroker.domain.PredictionKey;
-import org.powertac.brobroker.domain.PredictionResponse;
 import org.powertac.brobroker.domain.Weather;
 import org.powertac.brobroker.domain.WeatherPrediction;
 import org.powertac.samplebroker.interfaces.Activatable;
@@ -133,6 +132,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private Double sellingPrice = 0.0;
 
   private double oldLimitPrice = 10;
+  private double buyPriceMultiplier = 2.0;
 
   public MarketManagerService() {
     super();
@@ -412,12 +412,14 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     sellingPrice = prices.get(maxPriceIndex);
     Double predictedMaxAmount = amounts.get(maxPriceIndex);
     System.out.println("Min price index: " + minPriceIndex + "; max price index: " + maxPriceIndex);
+    
     Double alreadyClearedQuantityForMax = 0.0;
     if (maxPriceIndex < 23) {
       alreadyClearedQuantityForMax = clearedFuturesRepo.findById(currentTimeslot + maxPriceIndex + 1).getQuantity();
     }
     buyingOrderQuantity = predictedMaxAmount - alreadyClearedQuantityForMax;
-    submitOrder(buyingOrderQuantity, prices.get(minPriceIndex), buyingIndex);
+    //submitOrder(buyingOrderQuantity, prices.get(minPriceIndex)*buyPriceMultiplier, buyingIndex);
+    submitOrder(1,1000, buyingIndex);
   }
 
   private void sellInWholesale() {
@@ -430,7 +432,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    */
   private void submitOrder(double neededMWh, double price, int timeslot) {
 
-    System.out.println("new order for " + neededMWh + " at " + price + " in timeslot " + timeslot);
+    System.out.println("new order for " + neededMWh + " at " + price + " in timeslot " + 
+    timeslotRepo.currentTimeslot().getStartTime() + " " + timeslotRepo.currentTimeslot().slotInDay());
     Order order = new Order(broker.getBroker(), timeslot, neededMWh, price);
     if (lastOrders.get(timeslot) == null) {
       lastOrders.put(timeslot, new ArrayList<>());
