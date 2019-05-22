@@ -53,6 +53,7 @@ import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.brobroker.domain.Cleared;
 import org.powertac.brobroker.domain.PartialCleared;
 import org.powertac.brobroker.domain.PredictionKey;
+import org.powertac.brobroker.domain.PredictionResponse;
 import org.powertac.brobroker.domain.Weather;
 import org.powertac.brobroker.domain.WeatherPrediction;
 import org.powertac.samplebroker.interfaces.Activatable;
@@ -131,6 +132,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double buyingOrderQuantity = 0.0;
   private Double sellingPrice = 0.0;
 
+  private double oldLimitPrice = 10;
+
   public MarketManagerService() {
     super();
   }
@@ -198,7 +201,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     ArrayList<PartialCleared> next24Cleared = clearedFuturesRepo.getPartialClearedForNext24Timeslots(currentTimeslot);
     Cleared cleared = new Cleared(next24Cleared);
     clearedRepo.save(currentTimeslot, cleared);
-    System.out.println("Cleared for "+ct.getTimeslotIndex()+" by " +ct.getExecutionMWh());
+    //System.out.println("Cleared for "+ct.getTimeslotIndex()+" by " +ct.getExecutionMWh());
     log.info("Cleared Trade: Mwh - " + ct.getExecutionMWh() + "; Price: " + ct.getExecutionPrice() + " timeslot: "
         + ct.getTimeslotIndex());
   }
@@ -339,19 +342,25 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
       int index = (timeslot.getSerialNumber()) % broker.getUsageRecordLength();
       neededMWh = portfolioManager.collectUsage(index) / 1000.0;
-      MarketPosition posn = broker.getBroker().findMarketPositionByTimeslot(timeslot);
+      MarketPosition posn = broker.getBroker().findMarketPositionByTimeslot(timeslot.getSerialNumber());
       if (posn != null)
         neededMWh -= posn.getOverallBalance();
       if (Math.abs(neededMWh) <= minMWh) {
         log.info("no power required in timeslot " + timeslot);
         continue;
       }
-      submitOrder(neededMWh,50, timeslot.getSerialNumber());
-    }/*
-    if (this.currentTimeslot >= 385) {
+      submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
+    }
+    //doWholesaleShit();
+  }
+
+  private void doWholesaleShit() {
+    if (this.currentTimeslot >= 386) {
       if (!isShitRunning) {
         PredictionResponse prediction = api.getPrediction(this.currentTimeslot);
         ArrayList<Double> prices = prediction.getPredictedPrices();
+        System.out.println("Prices");
+        System.out.println(prices);
         ArrayList<Double> amounts = prediction.getPredictedAmounts();
         buyShit(prices, amounts);
         // check if can sell
@@ -372,8 +381,23 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       if (currentTimeslot == sellingIndex) {
         isShitRunning = false;
       }
-    }*/
+    }
+  }
 
+  private double computeLimitPrice(int timeslot) {
+    // set price between oldLimitPrice and maxPrice, according to number of
+    // remaining chances we have to get what we need.
+    double newLimitPrice = 20; // default value
+    double maxPrice = 50;
+    int current = timeslotRepo.currentSerialNumber();
+    int remainingTries = (timeslot - current);
+    if (remainingTries > 0) {
+      double range = (maxPrice - oldLimitPrice) * 2.0 / (double) remainingTries;
+      double computedPrice = oldLimitPrice + randomGen.nextDouble() * range;
+      oldLimitPrice = computedPrice;
+      return Math.max(newLimitPrice, computedPrice);
+    }
+    return 0;
   }
 
   private void buyShit(ArrayList<Double> prices, ArrayList<Double> amounts) {
@@ -384,7 +408,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     buyingIndex = this.currentTimeslot + minPriceIndex + 1;
     sellingPrice = prices.get(maxPriceIndex);
     Double predictedMaxAmount = amounts.get(maxPriceIndex);
-    Double alreadyClearedQuantityForMax = clearedFuturesRepo.findById(maxPriceIndex).getQuantity();
+    System.out.println("Min price index: " + minPriceIndex + "; max price index: " + maxPriceIndex);
+    Double alreadyClearedQuantityForMax = clearedFuturesRepo.findById(currentTimeslot + maxPriceIndex + 1).getQuantity();
     buyingOrderQuantity = predictedMaxAmount - alreadyClearedQuantityForMax;
     submitOrder(buyingOrderQuantity, prices.get(minPriceIndex), buyingIndex);
     isShitRunning = true;

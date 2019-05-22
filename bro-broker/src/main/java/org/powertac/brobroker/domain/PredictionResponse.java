@@ -26,7 +26,7 @@ public class PredictionResponse {
     }
     public ArrayList<Double> getPredictedPrices() {
         ArrayList<Double> prices = new ArrayList<>();
-        for (int i = 1; i < prices.size(); i+=2) {
+        for (int i = 1; i < prediction.size(); i+=2) {
             prices.add(prediction.get(i));
         }
         return prices;

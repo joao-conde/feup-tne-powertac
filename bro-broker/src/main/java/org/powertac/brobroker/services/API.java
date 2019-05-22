@@ -33,7 +33,7 @@ public class API {
     private Gson gson = new Gson();
 
     public PredictionResponse getPrediction(Integer timeslot) {
-        String data = buildPredictionData(timeslot);
+        String data = buildPredictionData(timeslot-1);
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost("http://localhost:5000/predict/");
         httpPost.setHeader("Content-type", "application/json");
@@ -71,16 +71,16 @@ public class API {
         }
         sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
         sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
-        System.out.println(i + "; " + clearedRepo.findById(i));
-        ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).getFutureCleared();
-        for (int k = 0; k < 23; k++) {
+        System.out.println(i + "; " + clearedRepo.findById(i-1));
+        ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i-1).getFutureCleared();
+        for (int k = 0; k < 24; k++) {
             sb.append(partialCleared.get(k).getQuantity() + ",");
             sb.append(partialCleared.get(k).getMeanPrice() + ",");
         }
 
-        for (int j = 1; j <= 23; j++) {
+        for (int j = 1; j <= 24; j++) {
             sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + j)).getTemperature() + ",");
-            if (j < 23) {
+            if (j < 24) {
                 sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + j)).getWindSpeed() + ",");
             } else {
                 sb.append(weatherForecastRepo.findById(new PredictionKey(i, i + j)).getWindSpeed());

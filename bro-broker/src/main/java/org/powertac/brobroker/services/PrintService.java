@@ -76,10 +76,10 @@ public class PrintService {
                 sb.append("CA"+i+",CP"+i+",T"+i+",WS"+i+",");
             }
             sb.append("CT,CWS,");
-            for (int i = 1; i <= 23; i++) {
+            for (int i = 1; i <= 24; i++) {
                 sb.append("PCA"+i+",PCP"+i+",");
             }
-            for (int i = 1; i <= 23; i++) {
+            for (int i = 1; i <= 24; i++) {
                 sb.append("TF"+i+",WSF"+i+",");
             }
             for (int i = 1; i <= 24; i++) {
@@ -137,13 +137,13 @@ public class PrintService {
                 }
                 sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
                 sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
-                ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i).getFutureCleared();
-                for (int k = 0; k < partialCleared.size()-1; k++) {
+                ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i-1).getFutureCleared();
+                for (int k = 0; k < 24; k++) {
                     sb.append(partialCleared.get(k).getQuantity() + ",");
                     sb.append(partialCleared.get(k).getMeanPrice() + ",");
                 }
 
-                for (int j = 1; j <= 23; j++) {
+                for (int j = 1; j <= 24; j++) {
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getTemperature() + ",");
                     sb.append(weatherForecastRepo.findById(new PredictionKey(i, i+j)).getWindSpeed() + ",");
                 }
