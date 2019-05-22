@@ -125,7 +125,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double meanMarketPrice = 0.0;
   private ArrayList<Double> balacingQuantity = new ArrayList<>();
   private ArrayList<Double> balacingPrice = new ArrayList<>();
-  private boolean isShitRunning = false;
+  private boolean isWholesaleAlgorithmRunning = false;
   private int currentTimeslot;
   private int sellingIndex;
   private int buyingIndex = 0;
@@ -351,12 +351,12 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       }
       submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
     }
-    doWholesaleShit();
+    doWholesaleMagic();
   }
 
-  private void doWholesaleShit() {
+  private void doWholesaleMagic() {
     if (this.currentTimeslot >= 386) {
-      if (!isShitRunning) {
+      if (!isWholesaleAlgorithmRunning) {
         PredictionResponse prediction = api.getPrediction(this.currentTimeslot);
         ArrayList<Double> prices = prediction.getPredictedPrices();
         ArrayList<Double> amounts = prediction.getPredictedAmounts();
@@ -364,8 +364,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
         System.out.println(prices);
         System.out.println("Predicted Amounts");
         System.out.println(amounts);
-        buyShit(prices, amounts);
-        isShitRunning = true;
+        buyInWholesale(prices, amounts);
+        isWholesaleAlgorithmRunning = true;
         // check if can sell
       } else {
         ArrayList<Order> ordersAtBuyingIndex = lastOrders.get(buyingIndex);
@@ -378,11 +378,11 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
         }
         if (isBuyingOrderCleared) {
           // buying order was cleared, we can now try to sell it
-          sellShit();
+          sellInWholesale();
         }
       }
       if (currentTimeslot == sellingIndex) {
-        isShitRunning = false;
+        isWholesaleAlgorithmRunning = false;
       }
     }
   }
@@ -403,7 +403,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     return 0;
   }
 
-  private void buyShit(ArrayList<Double> prices, ArrayList<Double> amounts) {
+  private void buyInWholesale(ArrayList<Double> prices, ArrayList<Double> amounts) {
     System.out.println("Buying");
     Pair<Integer, Integer> pricesMaxDiff = MaxDifference.maxDiff(prices);
     Integer maxPriceIndex = pricesMaxDiff.cdr();
@@ -421,7 +421,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     submitOrder(buyingOrderQuantity, prices.get(minPriceIndex), buyingIndex);
   }
 
-  private void sellShit() {
+  private void sellInWholesale() {
     System.out.println("Selling");
     submitOrder(-buyingOrderQuantity, sellingPrice, sellingIndex);
   }
