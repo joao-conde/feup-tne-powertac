@@ -38,15 +38,12 @@ public class API {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader("Content-type", "application/json");
         try {
-            System.out.println("data being sent");
-            System.out.println(data);
             StringEntity stringEntity = new StringEntity(data);
             httpPost.setEntity(stringEntity);
 
             CloseableHttpResponse response = httpClient.execute(httpPost);
             String prediction = new BasicResponseHandler().handleResponse(response);
             PredictionResponse predictionResponse = gson.fromJson(prediction, PredictionResponse.class);
-            System.out.println(predictionResponse.getArray());
             return predictionResponse;
         } catch (Exception e) {
             return new PredictionResponse();
@@ -71,7 +68,6 @@ public class API {
         }
         sb.append(weatherReportRepo.findById(i).getTemperature() + ",");
         sb.append(weatherReportRepo.findById(i).getWindSpeed() + ",");
-        System.out.println(i + "; " + clearedRepo.findById(i-1));
         ArrayList<PartialCleared> partialCleared = clearedRepo.findById(i-1).getFutureCleared();
         for (int k = 0; k < 24; k++) {
             sb.append(partialCleared.get(k).getQuantity() + ",");

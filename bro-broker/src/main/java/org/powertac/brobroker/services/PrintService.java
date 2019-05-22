@@ -95,26 +95,15 @@ public class PrintService {
     }
 
     public void addDistributionReport(int timeslot, double production, double consumption) {
-        timeslots.add(timeslot);
-        productions.add(production);
-        consumptions.add(consumption);
-        asksQuantity.add(tempAsks);
-        bidsQuantity.add(tempBids);
-        tempAsks = 0.0;
-        tempBids = 0.0;
-        System.out.println("addDistributionReport");
 
     }
 
     public void addBrokersAndConsumers(int numberOfBrokers, int numberOfConsumers) {
         this.numberOfBrokers = numberOfBrokers;
         this.numberOfConsumers = numberOfConsumers;
-        System.out.println("addBrokersAndConsumers");
     }
 
     public void addImbalance(Double imbalance) {
-        imbalances.add(imbalance);
-        System.out.println("addImbalance");
     }
 
     public void addAsksAndBids(Double asks, Double bids) {

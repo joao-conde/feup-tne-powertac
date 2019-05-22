@@ -131,7 +131,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double buyingOrderQuantity = 0.0;
   private Double sellingPrice = 0.0;
 
-  private double oldLimitPrice = 10;
+  private double oldLimitPrice = 50;
   private double buyPriceMultiplier = 2.0;
 
   public MarketManagerService() {
@@ -268,6 +268,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     ArrayList<Order> lastTries = lastOrders.get(tx.getTimeslotIndex());
     for (Order lastTry : lastTries) {
       if (tx.getMWh() == lastTry.getMWh()) {
+        System.out.println("Cleared "+lastTry.getMWh() + " for timeslot "+tx.getTimeslotIndex());
         lastTries.remove(lastTry);
       }
     }
@@ -339,18 +340,20 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     double neededMWh = 0.0;
     this.currentTimeslot = timeslotIndex;
     log.debug("Current timeslot is " + timeslotRepo.currentTimeslot().getSerialNumber());
-    for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
+    /*for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
       int index = (timeslot.getSerialNumber()) % broker.getUsageRecordLength();
       neededMWh = portfolioManager.collectUsage(index) / 1000.0;
       MarketPosition posn = broker.getBroker().findMarketPositionByTimeslot(timeslot.getSerialNumber());
       if (posn != null)
         neededMWh -= posn.getOverallBalance();
+      System.out.println(neededMWh);
       if (Math.abs(neededMWh) <= minMWh) {
         log.info("no power required in timeslot " + timeslot);
         continue;
       }
+      System.out.print("IS RETAIL SUBMIT");
       submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
-    }
+    }*/
     doWholesaleMagic();
   }
 
@@ -359,29 +362,47 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       if (!isWholesaleAlgorithmRunning) {
         ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
         ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
-        System.out.println("Predicted Prices");
-        System.out.println(prices);
-        System.out.println("Predicted Amounts");
-        System.out.println(amounts);
         buyInWholesale(prices, amounts);
         isWholesaleAlgorithmRunning = true;
         // check if can sell
       } else {
         ArrayList<Order> ordersAtBuyingIndex = lastOrders.get(buyingIndex);
+        ArrayList<Order> ordersAtSellingIndex = lastOrders.get(sellingIndex);
         Boolean isBuyingOrderCleared = true;
+        Boolean isSellingOrderCleared = true;
         for (Order o: ordersAtBuyingIndex) {
-          if (o.getMWh() == buyingOrderQuantity) {
+          if (Math.abs(o.getMWh()) == buyingOrderQuantity) {
             isBuyingOrderCleared = false;
             break;
           }
         }
-        if (isBuyingOrderCleared) {
+        if(ordersAtSellingIndex != null) {
+          for (Order o: ordersAtSellingIndex) {
+            if (Math.abs(o.getMWh()) == buyingOrderQuantity) {
+              isSellingOrderCleared = false;
+              break;
+            }
+          }
+        }
+
+        if (isBuyingOrderCleared && !isSellingOrderCleared) {
           // buying order was cleared, we can now try to sell it
           sellInWholesale();
+        } else if(isBuyingOrderCleared && isSellingOrderCleared) {
+          sellingIndex = 0;
+          System.out.println("Sold");
+          isWholesaleAlgorithmRunning = false;
         }
-      }
-      if (currentTimeslot == sellingIndex) {
-        isWholesaleAlgorithmRunning = false;
+        else {
+          System.out.println("isBuyingOrderCleared: " + isBuyingOrderCleared);
+          System.out.println("isSellingOrderCleared: " + isSellingOrderCleared);
+          System.out.println("isWholesaleAlgorithmRunning: " + isWholesaleAlgorithmRunning);
+          System.out.println("selling index: " + sellingIndex);
+        }
+        if(currentTimeslot == sellingIndex) {
+          System.out.println("Didn't sell");
+          isWholesaleAlgorithmRunning = false;
+        }
       }
     }
   }
@@ -389,8 +410,8 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   private double computeLimitPrice(int timeslot) {
     // set price between oldLimitPrice and maxPrice, according to number of
     // remaining chances we have to get what we need.
-    double newLimitPrice = 20; // default value
-    double maxPrice = 50;
+    double newLimitPrice = 50; // default value
+    double maxPrice = 20;
     int current = timeslotRepo.currentSerialNumber();
     int remainingTries = (timeslot - current);
     if (remainingTries > 0) {
@@ -418,8 +439,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       alreadyClearedQuantityForMax = clearedFuturesRepo.findById(currentTimeslot + maxPriceIndex + 1).getQuantity();
     }
     buyingOrderQuantity = predictedMaxAmount - alreadyClearedQuantityForMax;
-    //submitOrder(buyingOrderQuantity, prices.get(minPriceIndex)*buyPriceMultiplier, buyingIndex);
-    submitOrder(1,1000, buyingIndex);
+    submitOrder(buyingOrderQuantity, -prices.get(minPriceIndex)*buyPriceMultiplier, buyingIndex);  
   }
 
   private void sellInWholesale() {
@@ -432,8 +452,7 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
    */
   private void submitOrder(double neededMWh, double price, int timeslot) {
 
-    System.out.println("new order for " + neededMWh + " at " + price + " in timeslot " + 
-    timeslotRepo.currentTimeslot().getStartTime() + " " + timeslotRepo.currentTimeslot().slotInDay());
+    System.out.println("new order for " + neededMWh + " at " + price + " for timeslot "+timeslot);
     Order order = new Order(broker.getBroker(), timeslot, neededMWh, price);
     if (lastOrders.get(timeslot) == null) {
       lastOrders.put(timeslot, new ArrayList<>());
