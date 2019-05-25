@@ -113,10 +113,17 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
 
   private ArrayList<PowerType> targetPowerTypes = new ArrayList<PowerType>() {
     {
-      // green market
-      add(PowerType.ELECTRIC_VEHICLE);
+      // Green market
       add(PowerType.SOLAR_PRODUCTION);
       add(PowerType.WIND_PRODUCTION);
+      add(PowerType.ELECTRIC_VEHICLE);
+      add(PowerType.RUN_OF_RIVER_PRODUCTION);
+      
+      // Others
+      add(PowerType.CONSUMPTION);
+      add(PowerType.BATTERY_STORAGE);
+      add(PowerType.CHP_PRODUCTION);
+      add(PowerType.FOSSIL_PRODUCTION);
     }
   };
 
@@ -397,9 +404,9 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
           // building a better tariff for the customer
           TariffSpecification spec = new TariffSpecification(brokerContext.getBroker(), powerType);
 
-          double ourSignUp = Math.abs(bestTSForCustomer.getSignupPayment()) * 1.8;
-          double ourPerPayment = -Math.abs(bestTSForCustomer.getPeriodicPayment()) * 0.8;
-          double ourPenalty = -Math.abs(bestTSForCustomer.getEarlyWithdrawPayment()) * 2.2;
+          double ourSignUp = Math.abs(bestTSForCustomer.getSignupPayment()) * 3;
+          double ourPerPayment = -Math.abs(bestTSForCustomer.getPeriodicPayment()) * 2.5;
+          double ourPenalty = -Math.abs(bestTSForCustomer.getEarlyWithdrawPayment()) * 2;
           spec.withSignupPayment(ourSignUp);
           spec.withPeriodicPayment(ourPerPayment);
           spec.withEarlyWithdrawPayment(ourPenalty);
