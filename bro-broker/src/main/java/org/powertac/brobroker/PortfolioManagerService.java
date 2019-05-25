@@ -422,26 +422,6 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
     }
   }
 
-  // Creates initial tariffs for the main power types. These are simple
-  // fixed-rate two-part tariffs that give the broker a fixed margin.
-  // private void createInitialTariffs() {
-  // //sample broker does for all powertypes
-  // // 0.0 signup
-  // // -0.475 periodic
-  // // 0.0 withdrawal
-  // for (PowerType powerType : targetPowerTypes) {
-  // TariffSpecification spec = new TariffSpecification(brokerContext.getBroker(),
-  // powerType);
-  // spec.withSignupPayment(500);
-  // spec.withPeriodicPayment(-0.5);
-  // spec.withEarlyWithdrawPayment(-5);
-  // tariffRepo.addSpecification(spec);
-  // brokerContext.sendMessage(spec);
-
-  // activeTariffs.put(powerType, spec);
-  // }
-  // }
-
   private void createInitialTariffs() {
     // remember that market prices are per mwh, but tariffs are by kwh
     double marketPrice = marketManager.getMeanMarketPrice() / 1000.0;

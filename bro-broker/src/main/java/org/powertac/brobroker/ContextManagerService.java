@@ -30,13 +30,12 @@ import org.powertac.samplebroker.interfaces.Initializable;
 import org.springframework.stereotype.Service;
 
 /**
- * Handles incoming context and bank messages with example behaviors. 
+ * Handles incoming context and bank messages with example behaviors.
+ * 
  * @author John Collins
  */
 @Service
-public class ContextManagerService
-implements Initializable
-{
+public class ContextManagerService implements Initializable {
   static private Logger log = LogManager.getLogger(ContextManagerService.class);
 
   BrokerContext master;
@@ -46,47 +45,41 @@ implements Initializable
 
   private ArrayList<Double> cashArray = new ArrayList<>();
 
-//  @SuppressWarnings("unchecked")
+  // @SuppressWarnings("unchecked")
   @Override
-  public void initialize (BrokerContext broker)
-  {
-    if(!PrintService.getInstance().isInitialized()) {
+  public void initialize(BrokerContext broker) {
+    if (!PrintService.getInstance().isInitialized()) {
       PrintService.getInstance().startCSV();
-      Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
-      {
+      Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
-          @Override
-          public void run()
-          {
-              System.out.println("Printing");
-              PrintService.getInstance().printData();
-              System.out.println("Printed");
-          }
+        @Override
+        public void run() {
+          PrintService.getInstance().printData();
+        }
       }));
     }
 
     master = broker;
-// --- no longer needed ---
-//    for (Class<?> clazz: Arrays.asList(BankTransaction.class,
-//                                       CashPosition.class,
-//                                       DistributionReport.class,
-//                                       Competition.class,
-//                                       java.util.Properties.class)) {
-//      broker.registerMessageHandler(this, clazz);
-//    }    
+    // --- no longer needed ---
+    // for (Class<?> clazz: Arrays.asList(BankTransaction.class,
+    // CashPosition.class,
+    // DistributionReport.class,
+    // Competition.class,
+    // java.util.Properties.class)) {
+    // broker.registerMessageHandler(this, clazz);
+    // }
   }
 
   // -------------------- message handlers ---------------------
   //
   // Note that these arrive in JMS threads; If they share data with the
   // agent processing thread, they need to be synchronized.
-  
+
   /**
-   * BankTransaction represents an interest payment. Value is positive for 
-   * credit, negative for debit. 
+   * BankTransaction represents an interest payment. Value is positive for credit,
+   * negative for debit.
    */
-  public void handleMessage (BankTransaction btx)
-  {
+  public void handleMessage(BankTransaction btx) {
     // TODO - handle this
     log.info("Bank transaction: " + btx.toString());
   }
@@ -94,32 +87,31 @@ implements Initializable
   /**
    * CashPosition updates our current bank balance.
    */
-  public void handleMessage (CashPosition cp)
-  {
+  public void handleMessage(CashPosition cp) {
     cashArray.add(cp.getBalance());
     cash = cp.getBalance();
     log.info("Cash position: " + cash);
   }
-  
+
   /**
    * DistributionReport gives total consumption and production for the timeslot,
    * summed across all brokers.
    */
-  public void handleMessage (DistributionReport dr)
-  {
-    PrintService.getInstance().addDistributionReport(dr.getTimeslot(), dr.getTotalProduction(), dr.getTotalConsumption());
-    // System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+ dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
+  public void handleMessage(DistributionReport dr) {
+    PrintService.getInstance().addDistributionReport(dr.getTimeslot(), dr.getTotalProduction(),
+        dr.getTotalConsumption());
+    // System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+
+    // dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
     // // TODO - use this data
     // log.info("Distribution Report: " + dr.toString());
   }
-  
+
   /**
-   * Handles the Competition instance that arrives at beginning of game.
-   * Here we capture all the customer records so we can keep track of their
-   * subscriptions and usage profiles.
+   * Handles the Competition instance that arrives at beginning of game. Here we
+   * capture all the customer records so we can keep track of their subscriptions
+   * and usage profiles.
    */
-  public void handleMessage (Competition comp)
-  {
+  public void handleMessage(Competition comp) {
     // TODO - process competition properties
     log.info("Competition Properties: " + comp.toString());
   }
@@ -127,8 +119,7 @@ implements Initializable
   /**
    * Receives the server configuration properties.
    */
-  public void handleMessage (java.util.Properties serverProps)
-  {
+  public void handleMessage(java.util.Properties serverProps) {
     // TODO - adapt to the server setup.
     log.info("Server props: " + serverProps.toString());
   }

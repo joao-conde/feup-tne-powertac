@@ -360,10 +360,11 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     // else 
     if (this.currentTimeslot == 386) {
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
+      ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
       Double averagePrice = averagePrice(prices);
       for(Integer i=0; i<prices.size(); i++) {
         if(prices.get(i) <= averagePrice) {
-          submitOrder(10, -prices.get(i) * 0.8, 386+i+1);
+          submitOrder(amounts.get(i), -prices.get(i) * 0.8, 386+i+1);
         }
       }      
     }
@@ -371,19 +372,18 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
       ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
       Double averagePrice = averagePrice(prices);
-      int lastPriceIdx = prices.size() - 1;
+      int lastIdx = prices.size() - 1;
       System.out.println("Energy balance: " + energyBalance);
       if(energyBalance == 0){
-        if(prices.get(lastPriceIdx) <= averagePrice) {
-          submitOrder(10000, -prices.get(lastPriceIdx) * 0.6, this.currentTimeslot + 24);
+        if(prices.get(lastIdx) <= averagePrice) {
+          submitOrder(amounts.get(lastIdx), -prices.get(lastIdx) * 0.6, this.currentTimeslot + 24);
         }
       }
-      else 
-      if(energyBalance > 0){
-        submitOrder(-energyBalance, prices.get(0) * 0.8, this.currentTimeslot + 1);
-      }
+      // else if(energyBalance > 0){
+      //   submitOrder(-energyBalance * 2, prices.get(0) * 0.8, this.currentTimeslot + 1);
+      // }
       else if(energyBalance < 0){
-        submitOrder(-energyBalance, -prices.get(0), this.currentTimeslot + 1);
+        submitOrder(-energyBalance * 2, -prices.get(0), this.currentTimeslot + 1);
       }
     }
   }
