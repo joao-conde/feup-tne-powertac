@@ -339,24 +339,10 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
     double neededMWh = 0.0;
     this.currentTimeslot = timeslotIndex;
     System.out.println("Timeslot " + timeslotRepo.currentTimeslot().getSerialNumber());
-    /*for (Timeslot timeslot : timeslotRepo.enabledTimeslots()) {
-      int index = (timeslot.getSerialNumber()) % broker.getUsageRecordLength();
-      neededMWh = portfolioManager.collectUsage(index) / 1000.0;
-      MarketPosition posn = broker.getBroker().findMarketPositionByTimeslot(timeslot.getSerialNumber());
-      if (posn != null)
-        neededMWh -= posn.getOverallBalance();
-      System.out.println(neededMWh);
-      if (Math.abs(neededMWh) <= minMWh) {
-        log.info("no power required in timeslot " + timeslot);
-        continue;
-      }
-      System.out.print("IS RETAIL SUBMIT");
-      submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
-    }*/
-    doWholesaleMagic();
+    applyWholeSaleStrategy();
   }
 
-  private void doWholesaleMagic() {
+  private void applyWholeSaleStrategy() {
     //place first 24h orders
     if (this.currentTimeslot == 386) {
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
