@@ -108,9 +108,9 @@ implements Initializable
   public void handleMessage (DistributionReport dr)
   {
     PrintService.getInstance().addDistributionReport(dr.getTimeslot(), dr.getTotalProduction(), dr.getTotalConsumption());
-    System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+ dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
-    // TODO - use this data
-    log.info("Distribution Report: " + dr.toString());
+    // System.out.println("For timeslot "+ dr.getTimeslot() +" \n Consumption: "+ dr.getTotalConsumption() + "\n Production: "+dr.getTotalProduction());
+    // // TODO - use this data
+    // log.info("Distribution Report: " + dr.toString());
   }
   
   /**

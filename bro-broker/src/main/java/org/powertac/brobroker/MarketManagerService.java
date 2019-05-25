@@ -354,10 +354,10 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       System.out.print("IS RETAIL SUBMIT");
       submitOrder(neededMWh,computeLimitPrice(timeslot.getSerialNumber()), timeslot.getSerialNumber());
     }*/
-    doWholesaleMagic();
+    applyWholeSaleStrategy();
   }
 
-  private void doWholesaleMagic() {
+  private void applyWholeSaleStrategy() {
     if (this.currentTimeslot >= 386) {
       if (!isWholesaleAlgorithmRunning) {
         ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
