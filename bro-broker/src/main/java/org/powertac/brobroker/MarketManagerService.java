@@ -343,21 +343,31 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
   }
 
   private void applyWholeSaleStrategy() {
+    Double energyBalance = broker.getBroker().findMarketPositionByTimeslot(this.currentTimeslot).getOverallBalance();
     //place first 24h orders
+    // if(this.currentTimeslot < 386){
+    //  MUST FIND A STRATEGY FOR FIRST 24 BECAUSE OF RETAIL TARIFFS
+    //   if(energyBalance == 0){
+    //     submitOrder(100, -20, this.currentTimeslot + 1);
+    //   }
+    //   else if(energyBalance > 0){
+    //     submitOrder(-energyBalance * 1.5, 25, this.currentTimeslot + 1);
+    //   }
+    //   else if(energyBalance < 0){
+    //     submitOrder(-energyBalance * 1.5, -20, this.currentTimeslot + 1);
+    //   }
+    // }
+    // else 
     if (this.currentTimeslot == 386) {
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
-      ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
       Double averagePrice = averagePrice(prices);
       for(Integer i=0; i<prices.size(); i++) {
         if(prices.get(i) <= averagePrice) {
           submitOrder(10, -prices.get(i) * 0.8, 386+i+1);
-        } else {
-          submitOrder(-10, prices.get(i) * 1.2, 386+i+1);
         }
       }      
     }
     else if(this.currentTimeslot > 386){
-      Double energyBalance = broker.getBroker().findMarketPositionByTimeslot(this.currentTimeslot).getOverallBalance();
       ArrayList<Double> prices = api.predictPrices(this.currentTimeslot);
       ArrayList<Double> amounts = api.predictAmounts(this.currentTimeslot);
       Double averagePrice = averagePrice(prices);
@@ -365,17 +375,15 @@ public class MarketManagerService implements MarketManager, Initializable, Activ
       System.out.println("Energy balance: " + energyBalance);
       if(energyBalance == 0){
         if(prices.get(lastPriceIdx) <= averagePrice) {
-          submitOrder(10, -prices.get(lastPriceIdx) * 0.6, this.currentTimeslot + 24);
-        }
-        else{
-          submitOrder(-10, prices.get(lastPriceIdx) * 1.2, this.currentTimeslot + 24);
+          submitOrder(10000, -prices.get(lastPriceIdx) * 0.6, this.currentTimeslot + 24);
         }
       }
-      else if(energyBalance > 0){
+      else 
+      if(energyBalance > 0){
         submitOrder(-energyBalance, prices.get(0) * 0.8, this.currentTimeslot + 1);
       }
       else if(energyBalance < 0){
-        submitOrder(-energyBalance, -prices.get(0) * 1.2, this.currentTimeslot + 1);
+        submitOrder(-energyBalance, -prices.get(0), this.currentTimeslot + 1);
       }
     }
   }

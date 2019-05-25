@@ -202,6 +202,10 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
     getCompetingTariffs(spec.getPowerType()).add(spec);
   }
 
+  private int getNumberOfCustomers() {
+    return this.customerRepo.count();
+  }
+
   /**
    * Returns total usage for a given timeslot (represented as a simple index).
    */
@@ -353,6 +357,7 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
   public synchronized void activate(int timeslotIndex) {
     System.out.println("\nActivate from PortfolioManager " + timeslotIndex);
     System.out.println("\n");
+
     if (customerSubscriptions.size() == 0) {
       createInitialTariffs();
     } else
@@ -391,10 +396,14 @@ public class PortfolioManagerService implements PortfolioManager, Initializable,
         if (bestTSForCustomer.getBroker() != brokerContext.getBroker()) { // its not ours
           // building a better tariff for the customer
           TariffSpecification spec = new TariffSpecification(brokerContext.getBroker(), powerType);
-          spec.withEarlyWithdrawPayment(bestTSForCustomer.getEarlyWithdrawPayment() + 10);
-          spec.withSignupPayment(bestTSForCustomer.getSignupPayment() * 1.5);
-          spec.withPeriodicPayment(
-              bestTSForCustomer.getPeriodicPayment() + Math.abs(bestTSForCustomer.getPeriodicPayment()) * 0.3);
+
+          double ourSignUp = Math.abs(bestTSForCustomer.getSignupPayment()) * 1.8;
+          double ourPerPayment = -Math.abs(bestTSForCustomer.getPeriodicPayment()) * 0.8;
+          double ourPenalty = -Math.abs(bestTSForCustomer.getEarlyWithdrawPayment()) * 2.2;
+          spec.withSignupPayment(ourSignUp);
+          spec.withPeriodicPayment(ourPerPayment);
+          spec.withEarlyWithdrawPayment(ourPenalty);
+
           tariffRepo.addSpecification(spec);
           brokerContext.sendMessage(spec);
 
