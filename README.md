@@ -4,7 +4,7 @@ This repository holds the research made, paper and presentation produced as well
 
 *TNE* stands for *Tecnologias para Negócio Eletrónico* which translates to *Electronic Business Technologies*. Thus the agent is named after the course in which this agent was developed and the year of participation in a PowerTAC competition simulation.
 
-**Details of implementation and strategies used as well as results can be found in the form of a [scientific paper](docs/AgentTNE19.pdf) and [powerpoint presentation](docs/AgentTNE19.pptx).**
+**Details of implementation and strategies used as well as results can be found in the form of a [scientific paper](docs/paper-tne19.pdf) and [presentation](docs/presentation-tne19.pdf).**
 
 
 ## How to run
